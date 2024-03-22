@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.ft.word_arena_game"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.ft.word_arena_game"
