@@ -50,7 +50,7 @@ fun registerUser(username: String, password: String, onResult: (Boolean, String)
                 // Kullanıcı başarıyla oluşturuldu, şimdi kullanıcı adını kaydedelim
                 val userId = authTask.result?.user?.uid ?: return@addOnCompleteListener onResult(false, "No user ID found")
                 val userMap = hashMapOf("username" to username, "userId" to userId, "password" to password)
-                Firebase.firestore.collection("usernames").document(username)
+                Firebase.firestore.collection("usernames").document(userId)
                     .set(userMap)
                     .addOnSuccessListener {
                         onResult(true, "Kayıt başarılı!")

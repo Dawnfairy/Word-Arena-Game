@@ -7,17 +7,21 @@ import com.ft.word_arena_game.ui.screens.LoginScreen
 import com.ft.word_arena_game.ui.screens.SignUpScreen
 import androidx.navigation.compose.rememberNavController
 import com.ft.word_arena_game.ui.navigation.Destinations.LoginRoute
+import com.ft.word_arena_game.ui.navigation.Destinations.RoomRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.RoomSelectionRoute
+import com.ft.word_arena_game.ui.navigation.Destinations.RoomTypeSelectionRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.SignUpRoute
-import com.ft.word_arena_game.ui.screens.GameSelectionScreen
+import com.ft.word_arena_game.ui.screens.RoomScreen
+import com.ft.word_arena_game.ui.screens.RoomSelectionScreen
+import com.ft.word_arena_game.ui.screens.RoomTypeSelectionScreen
 
 // NavGraph.kt
 object Destinations {
-    const val HomeRoute = "home"
     const val LoginRoute = "login"
     const val SignUpRoute = "signup"
-    const val RoomSelectionRoute = "roomSelection"
-
+    const val RoomTypeSelectionRoute = "roomTypeSelection"
+    const val RoomSelectionRoute = "roomSelection/{roomType}"
+    const val RoomRoute = "room/{roomType}/{roomNumber}"
 }
 
 @Composable
@@ -27,8 +31,18 @@ fun NavGraph(startDestination: String = "login") {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(LoginRoute) { LoginScreen(navController) }
         composable(SignUpRoute) { SignUpScreen(navController) }
-        composable(RoomSelectionRoute) { GameSelectionScreen(navController) }
 
-        // Add more composable screens here if needed
+        composable(RoomTypeSelectionRoute) {
+            RoomTypeSelectionScreen(navController)
+        }
+        composable(RoomSelectionRoute) { backStackEntry ->
+            val roomType = backStackEntry.arguments?.getString("roomType") ?: return@composable
+            RoomSelectionScreen(navController, roomType)
+        }
+        composable(RoomRoute) { backStackEntry ->
+            val roomType = backStackEntry.arguments?.getString("roomType") ?: return@composable
+            val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: return@composable
+            RoomScreen(navController, roomType, roomNumber)
+        }
     }
 }

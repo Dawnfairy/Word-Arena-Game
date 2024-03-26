@@ -27,7 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.ft.word_arena_game.ui.components.GameButton
 import com.ft.word_arena_game.ui.components.GameTextField
 import com.ft.word_arena_game.ui.components.SignUpText
-import com.ft.word_arena_game.ui.navigation.Destinations.RoomSelectionRoute
+import com.ft.word_arena_game.ui.navigation.Destinations.RoomTypeSelectionRoute
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -74,7 +74,7 @@ fun LoginScreen(navController: NavController) {
                         if (task.isSuccessful) {
                             // Giriş başarılı, ana ekrana yönlendir
                             Toast.makeText(context, "Giriş başarılı", Toast.LENGTH_SHORT).show()
-                            navController.navigate(RoomSelectionRoute) // Ana ekran yönlendirmesi güncellenebilir
+                            navController.navigate(RoomTypeSelectionRoute) // Ana ekran yönlendirmesi güncellenebilir
                         } else {
                             // Giriş başarısız, hata mesajını göster
                             Toast.makeText(context, "Giriş başarısız: ${task.exception?.message}", Toast.LENGTH_SHORT).show()

@@ -12,38 +12,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 @Composable
-fun RoomOptionsScreen(onRoomSelected: (String) -> Unit ,  selectedGameType: String?) {
+fun RoomSelectionScreen(navController: NavController, roomType: String) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Oda Seçin: $selectedGameType")
+        Text("Oda Seçin: $roomType")
         // 4 Harfli Oda
-        RoomOptionButton("4 Harfli Oda", onRoomSelected)
+        RoomOptionButton(navController,roomType,"4 Harfli Oda")
         Spacer(modifier = Modifier.height(8.dp))
 
         // 5 Harfli Oda
-        RoomOptionButton("5 Harfli Oda", onRoomSelected)
+        RoomOptionButton(navController,roomType,"5 Harfli Oda")
         Spacer(modifier = Modifier.height(8.dp))
 
         // 6 Harfli Oda
-        RoomOptionButton("6 Harfli Oda", onRoomSelected)
+        RoomOptionButton(navController,roomType,"6 Harfli Oda")
         Spacer(modifier = Modifier.height(8.dp))
 
         // 7 Harfli Oda
-        RoomOptionButton("7 Harfli Oda", onRoomSelected)
+        RoomOptionButton(navController,roomType,"7 Harfli Oda")
     }
 }
 
 @Composable
-fun RoomOptionButton(roomName: String, onRoomSelected: (String) -> Unit) {
+fun RoomOptionButton(navController: NavController,roomType: String, roomNumber: String) {
     Button(
-        onClick = { onRoomSelected(roomName) },
+        onClick = { navController.navigate("room/$roomType/$roomNumber") },
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
     ) {
         Text(
-            text = roomName,
+            text = roomNumber,
             color = Color.White,
             fontWeight = FontWeight.Medium
         )

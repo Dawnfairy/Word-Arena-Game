@@ -12,10 +12,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,44 +22,7 @@ import androidx.navigation.NavController
 
 
 @Composable
-fun GameSelectionScreen(navController: NavController) {
-    var selectedGameType by remember { mutableStateOf<String?>(null) }
-    var selectedRoom by remember { mutableStateOf<String?>(null) }
-
-    when {
-        selectedGameType == null -> {
-            GameRoomSelectionScreen(onGameTypeSelected = { gameType ->
-                selectedGameType = gameType
-            }, navController = navController )
-        }
-        selectedRoom == null -> {
-            // Burada selectedGameType parametresini geçtiğinizden emin olun
-            RoomOptionsScreen(
-                onRoomSelected = { room ->
-                    selectedRoom = room
-                    // Burada odanın seçilmesine bağlı işlemler yapabilirsiniz
-                },
-                selectedGameType = selectedGameType // Bu parametreyi ekleyin
-            )
-        }
-        else -> {
-            // Seçimler yapıldıktan sonra oyun ekranını göster
-            GamePlayScreen(selectedGameType, selectedRoom)
-        }
-    }
-}
-
-
-@Composable
-fun GamePlayScreen(selectedGameType: String?, selectedRoom: String?) {
-    // Oyun içeriğiniz buraya gelecek
-    Text(text = "Oyun oynanıyor: $selectedGameType, Oda: $selectedRoom")
-}
-
-
-
-@Composable
-fun GameRoomSelectionScreen(onGameTypeSelected: (String) -> Unit, navController: NavController) {
+fun RoomTypeSelectionScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,7 +40,7 @@ fun GameRoomSelectionScreen(onGameTypeSelected: (String) -> Unit, navController:
         )
 
         Button(
-            onClick = { onGameTypeSelected("Harf Sabiti Var")  },
+            onClick = { navController.navigate("roomSelection/Harf Sabiti Var")  },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1363E8)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,7 +57,7 @@ fun GameRoomSelectionScreen(onGameTypeSelected: (String) -> Unit, navController:
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { onGameTypeSelected("Harf Sabiti Yok")  },
+            onClick = { navController.navigate("roomSelection/Harf Sabiti Yok")  },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8135B)),
             modifier = Modifier
                 .fillMaxWidth()
