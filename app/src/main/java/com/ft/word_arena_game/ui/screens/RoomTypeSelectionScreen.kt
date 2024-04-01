@@ -40,7 +40,7 @@ fun RoomTypeSelectionScreen(navController: NavController) {
         )
 
         Button(
-            onClick = { navController.navigate("roomSelection/Harf Sabiti Var")  },
+            onClick = { navController.navigate("roomSelection/true")  },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1363E8)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -57,7 +57,7 @@ fun RoomTypeSelectionScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { navController.navigate("roomSelection/Harf Sabiti Yok")  },
+            onClick = { navController.navigate("roomSelection/false") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8135B)),
             modifier = Modifier
                 .fillMaxWidth()

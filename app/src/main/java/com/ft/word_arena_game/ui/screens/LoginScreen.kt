@@ -17,6 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,14 +41,29 @@ fun LoginScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFF1E1E1E)),
+            .background(brush = Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFfef8ec), // Köşedeki ilk renk
+                    Color(0xFFfcebe1)  // Köşedeki ikinci renk
+                ),
+                start = Offset.Zero, // Başlangıç köşesi (sol üst)
+                end = Offset.Infinite // Bitiş köşesi (sağ alt)
+            ))
+                ,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        /*Image(
+            modifier = Modifier.fillMaxWidth()
+                .height(IntrinsicSize.Min), // Bu, görüntünün genişliğini maksimuma çıkarır
+            painter = painterResource(R.drawable.login),
+            contentDescription = "login",
+            contentScale = ContentScale.Fit
+        )*/
         Text(
             text = "WordArena'ya Hoş Geldiniz!",
             style = MaterialTheme.typography.titleLarge,
-            color = Color.White,
+            //color = Color.White,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 16.dp)
         )

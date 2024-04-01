@@ -24,7 +24,7 @@ fun SignUpText(
             .padding(16.dp),
         horizontalArrangement = Arrangement.Center
     ) {
-        Text("Hesabın yok mu? ", color = Color.White)
+        Text("Hesabın yok mu? ")
         Text(
             "Kaydol",
             color = Color(0xFF3D81F6),
