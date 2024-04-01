@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
+import com.ft.word_arena_game.ui.navigation.Destinations.GameRoute
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
@@ -76,6 +77,11 @@ fun RoomScreen(navController: NavController, selectedGameType: String, selectedR
         } else {
             Text(text = "Odadan ayrıldınız.")
         }
+
+        Button(onClick = { navController.navigate(GameRoute) }) {
+            Text("Oyuna Gir")
+        }
+
     }
 }
 
