@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
         setContent {
             WordArenaGameTheme {
-                // A theme scoped to the app that provides Material3 theming
+
                 NavGraph()
 
 
