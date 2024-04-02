@@ -61,19 +61,17 @@ import kotlin.random.Random
 
 
 @Composable
-fun GameScreen(navController: NavController) {
+fun GameScreen(navController: NavController, selectedGameType: Boolean, selectedRoom: String, randomLetter: String, wordIndex: Int) {
 
 
     val context = LocalContext.current
     val connect =  GameConnection(context = context)
-
-
     val dortHarfliKelimeler = listOf("konu", "olay", "ülke", "adam", "para", "anne", "baba", "süre", "saat", "sıra", "kapı", "gece", "alan", "ürün", "aile", "halk", "akıl", "ayak", "araç", "hava", "sayı", "grup", "soru", "arka", "yazı", "okul", "renk", "yapı", "amaç", "film", "etki", "ışık", "oyun", "oran", "oğul", "lira", "ağız", "masa", "kafa", "spor", "ölüm", "isim", "kent", "önem", "koca", "ilgi", "koku", "ağaç", "bina", "kalp", "şart", "köşe", "bura", "ölçü", "dolu", "izin", "ateş", "fark", "tane", "ders", "defa", "batı", "dost", "plan", "karı", "cilt", "kaza", "adım", "ilaç", "yasa", "ceza", "ilke", "hoca", "adet", "faiz", "hata", "kere", "olma", "deri", "eşya", "aday", "öykü", "uçak", "doğa", "işçi", "kamu", "çaba", "risk", "cami", "sene", "otel", "zevk", "okur", "site", "abla", "kilo", "sırt", "paşa", "kriz")
     val besHarfliKelimeler = listOf("insan", "değil", "ZAMAN", "çocuk", "gider", "neden", "sebep", "kadın", "dünya", "durum", "şekil", "taraf", "hayat", "bilgi", "sonuç", "sorun", "sahip", "yüzde", "olays", "istem", "kitap", "bugün", "erkek", "çevre", "yaşam", "sokak", "tarih", "bölüm", "anlam", "banka", "madde", "karar", "biçim", "haber", "Allah", "parça", "değer", "gelir", "görev", "bölge", "deniz", "vücut", "temel", "resim", "hanım", "hatun", "nokta", "işlem", "orada", "araba", "duygu", "örnek", "duvar", "sanat", "takım", "müzik", "türlü", "kısım", "sabah", "ortam", "düzey", "aşağı", "cevap", "akşam", "hasta", "şehir", "hafta", "hesap", "fiyat", "satış", "içeri", "savaş", "kalan", "sayfa", "kurum", "kağıt", "cadde", "pazar", "sınıf", "güneş", "parti", "yatak", "yazar", "kulak", "sebep", "kural", "firma", "proje", "model", "balık", "görüş", "bahçe", "sevgi", "ekmek", "kurul", "köpek", "istek", "korku", "polis", "fikir", "koşul", "ortak", "hedef", "kenar", "beyin", "çizgi", "süreç", "bakış", "bilim", "ifade", "beden", "çözüm", "seçim", "zarar", "metre", "bitki", "kredi", "imkan", "kanal", "şarkı", "sahne", "aşama", "orman", "düzen", "hücre", "roman", "vergi", "basın", "sınır", "birey", "bebek", "bakan", "boyut", "dergi", "inanç", "üzeri", "giriş", "baskı", "tepki", "cümle", "Tanrı", "tavır", "yayın", "vakit", "daire", "katkı", "yanıt", "burun", "çıkar", "medya", "artış", "yürek", "belge", "etraf", "meyve", "bacak", "kanun", "müdür", "hukuk", "silah", "talep", "asker", "beyan", "besin", "çiçek", "saygı", "ücret", "gider", "örgüt", "boyun", "cihaz", "denge", "kahve", "öteki", "adres", "güven", "marka", "yarar", "gönül", "hayal", "şarap", "altın", "eylem", "kesim", "birim")
     val altiHarfliKelimeler = listOf("içinde", "devlet", "gerçek", "ilişki", "toplum", "şirket", "kaynak", "gazete", "doktor", "eğitim", "milyon", "kültür", "hizmet", "dikkat", "üretim", "dakika", "derece", "yöntem", "enerji", "sağlık", "teknik", "dışarı", "merkez", "toprak", "trafik", "mutfak", "varlık", "hayvan", "sektör", "yüzyıl", "sigara", "kelime", "başarı", "piyasa", "miktar", "meydan", "yardım", "kardeş", "meslek", "başkan", "numara", "sinema", "kavram", "mektup", "makine", "kalite", "eleman", "günlük", "koltuk", "hikaye", "ağabey", "destek", "otobüs", "sanayi", "millet", "reklam", "geçmiş", "toplam", "dükkan", "servis", "tedavi", "kimlik", "mesele", "sürücü", "milyar", "fırsat", "mağaza", "sözcük", "korgan", "rüzgar", "telefo", "yıldız", "bilinç", "mevcut", "meclis", "yaprak")
     val yediHarfliKeliemeler = listOf("arkadaş", "özellik", "program", "hareket", "çalışma", "müşteri", "telefon", "düşünce", "ihtiyaç", "gelecek", "öğrenci", "yönetim", "yabancı", "ekonomi", "hükümet", "malzeme", "pencere", "mahalle", "görüntü", "anlayış", "kontrol", "üstünde", "gelişme", "sanatçı", "içerisi", "nitelik", "problem", "ağırlık", "sıkıntı", "yatırım", "tehlike", "işletme", "sigorta", "değişim", "çerçeve", "yetenek", "ticaret", "vitamin", "yumurta"   )
-    val harfSayisi = 6
-    val harfSabitiVarMi = true
+    val harfSayisi = selectedRoom.toInt()
+    val harfSabitiVarMi = selectedGameType
     var kutuBoyutu = 70
     var kutuMesafesi = 16
     var yazıBoyutu = 32
@@ -1282,14 +1280,4 @@ fun LetterInput(
     )
 }
 
-
-
-
-
-@Composable
-@Preview(showBackground = true)
-fun GameScreenPreview() {
-    val navController = rememberNavController()
-    GameScreen(navController = navController)
-}
 

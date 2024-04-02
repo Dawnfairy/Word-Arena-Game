@@ -49,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 
 data class User(
@@ -213,15 +214,17 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                         }
                                     )
                                     user?.let { it1 ->
+                                        val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(selectedRoom)
                                         updateUserStatus(
                                             selectedGameType,
                                             selectedRoom,
                                             it1.uid,
                                             "oyunda"
-                                        ) {
-
-                                        }
+                                        )
+                                        navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
                                     }
+
+
                                 }) {
                                     Text("Kabul Et")
                                 }
@@ -395,15 +398,14 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                                     "${user.username} isteğinizi kabul etti.",
                                                     Toast.LENGTH_LONG
                                                 ).show()
-
+                                                val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(selectedRoom)
                                                 updateUserStatus(
                                                     selectedGameType,
                                                     selectedRoom,
                                                     Firebase.auth.currentUser!!.uid,
                                                     "oyunda"
-                                                ) {
-
-                                                }
+                                                )
+                                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
                                             }
 
 
@@ -707,8 +709,7 @@ fun updateUserStatus(
     gameType: Boolean,
     roomType: String,
     userId: String,
-    status: String,
-    onComplete: () -> Unit
+    status: String
 ) {
     val db = FirebaseFirestore.getInstance()
     val path = "game_rooms/$gameType/rooms/$roomType/players"
@@ -763,6 +764,14 @@ fun findUsernameById(userId: String, db: FirebaseFirestore, onUsernameFound: (St
         onUsernameFound(null)
     }
 }
+fun getRandomTurkishLetterAndWordIndex(roomType: String): Pair<String, Int> {
+    val turkishLetters = arrayOf("a", "b", "c", "ç", "d", "e", "f", "g", "ğ", "h", "ı", "i", "j", "k", "l", "m", "n", "o", "ö", "p", "r", "s", "ş", "t", "u", "ü", "v", "y", "z")
+    val randomNumber = Random.nextInt(turkishLetters.size)
+    val selectedLetter = turkishLetters[randomNumber]
+    val wordIndex = Random.nextInt(roomType.toInt()) // Assuming the word index is a random number from 0 to 4
+    return Pair(selectedLetter, wordIndex)
+}
+
 
 @Preview(showBackground = true)
 @Composable

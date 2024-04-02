@@ -8,11 +8,13 @@ import com.ft.word_arena_game.ui.screens.LoginScreen
 import com.ft.word_arena_game.ui.screens.SignUpScreen
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ft.word_arena_game.ui.navigation.Destinations.GameRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.LoginRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.RoomRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.RoomSelectionRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.RoomTypeSelectionRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.SignUpRoute
+import com.ft.word_arena_game.ui.screens.GameScreen
 import com.ft.word_arena_game.ui.screens.RoomScreen
 import com.ft.word_arena_game.ui.screens.RoomSelectionScreen
 import com.ft.word_arena_game.ui.screens.RoomTypeSelectionScreen
@@ -24,6 +26,7 @@ object Destinations {
     const val RoomTypeSelectionRoute = "roomTypeSelection"
     const val RoomSelectionRoute = "roomSelection/{roomType}"
     const val RoomRoute = "room/{roomType}/{roomNumber}"
+    const val GameRoute = "game/{roomType}/{roomNumber}/{randomLetter}/{wordIndex}"
 }
 
 @Composable
@@ -37,14 +40,14 @@ fun NavGraph(startDestination: String = "login") {
         composable(RoomTypeSelectionRoute) {
             RoomTypeSelectionScreen(navController)
         }
-            composable(
-                route = RoomSelectionRoute,
-                arguments = listOf(
-                    navArgument("roomType") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val roomType = backStackEntry.arguments?.getString("roomType")?.toBoolean() ?: false
-                RoomSelectionScreen(navController, roomType)
-            }
+        composable(
+            route = RoomSelectionRoute,
+            arguments = listOf(
+                navArgument("roomType") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val roomType = backStackEntry.arguments?.getString("roomType")?.toBoolean() ?: false
+            RoomSelectionScreen(navController, roomType)
+        }
 
 
         composable(route = RoomRoute,
@@ -55,6 +58,20 @@ fun NavGraph(startDestination: String = "login") {
             val roomType = backStackEntry.arguments?.getBoolean("roomType") ?: false
             val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: ""
             RoomScreen(navController, roomType, roomNumber)
+        }
+
+        composable(route = GameRoute,
+            arguments = listOf(
+                navArgument("roomType") { type = NavType.BoolType },
+                navArgument("roomNumber") { type = NavType.StringType },
+                navArgument("randomLetter") { type = NavType.StringType },
+                navArgument("wordIndex") { type = NavType.IntType }
+            )) { backStackEntry ->
+            val roomType = backStackEntry.arguments?.getBoolean("roomType") ?: false
+            val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: ""
+            val randomLetter = backStackEntry.arguments?.getString("randomLetter") ?: ""
+            val wordIndex = backStackEntry.arguments?.getInt("wordIndex") ?: -1
+            GameScreen(navController, roomType, roomNumber, randomLetter, wordIndex)
         }
     }
 }
