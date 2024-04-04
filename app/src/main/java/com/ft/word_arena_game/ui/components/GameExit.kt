@@ -21,9 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.ft.word_arena_game.ui.screens.updateGamerWinnerInRoom
 
 @Composable
-fun GameExit()
+fun GameExit(gameType: Boolean, roomType: String, userId: String)
 {
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -48,9 +49,11 @@ fun GameExit()
     if (showDialog) {
         ExitConfirmationDialog(
             onConfirm = {
-                backCallback.isEnabled = false
-                backCallback.remove()
-                (context as OnBackPressedDispatcherOwner).onBackPressedDispatcher.onBackPressed()
+                updateGamerWinnerInRoom(gameType,roomType,userId, "kaybeden", "kazanan"){
+                    backCallback.isEnabled = false
+                    backCallback.remove()
+                    (context as OnBackPressedDispatcherOwner).onBackPressedDispatcher.onBackPressed()
+                }
             },
             onDismiss = {
                 showDialog = false
@@ -95,6 +98,7 @@ fun ExitConfirmationDialog(
                 }
             ) {
                 Text("Onayla")
+
             }
         },
         dismissButton = {

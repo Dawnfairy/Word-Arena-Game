@@ -2,6 +2,7 @@ package com.ft.word_arena_game.ui.screens
 
 
 import android.annotation.SuppressLint
+import android.util.Log
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,31 +46,445 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
 import com.ft.word_arena_game.ui.components.GameConnection
 import com.ft.word_arena_game.ui.components.GameExit
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 
 @Composable
-fun GameScreen(navController: NavController, selectedGameType: Boolean, selectedRoom: String, randomLetter: String, wordIndex: Int) {
+fun GameScreen(
+    navController: NavController,
+    selectedGameType: Boolean,
+    selectedRoom: String,
+    randomLetter: String,
+    wordIndex: Int
+) {
 
-
+    val user = Firebase.auth.currentUser
     val context = LocalContext.current
-    val connect =  GameConnection(context = context)
-    val dortHarfliKelimeler = listOf("konu", "olay", "ülke", "adam", "para", "anne", "baba", "süre", "saat", "sıra", "kapı", "gece", "alan", "ürün", "aile", "halk", "akıl", "ayak", "araç", "hava", "sayı", "grup", "soru", "arka", "yazı", "okul", "renk", "yapı", "amaç", "film", "etki", "ışık", "oyun", "oran", "oğul", "lira", "ağız", "masa", "kafa", "spor", "ölüm", "isim", "kent", "önem", "koca", "ilgi", "koku", "ağaç", "bina", "kalp", "şart", "köşe", "bura", "ölçü", "dolu", "izin", "ateş", "fark", "tane", "ders", "defa", "batı", "dost", "plan", "karı", "cilt", "kaza", "adım", "ilaç", "yasa", "ceza", "ilke", "hoca", "adet", "faiz", "hata", "kere", "olma", "deri", "eşya", "aday", "öykü", "uçak", "doğa", "işçi", "kamu", "çaba", "risk", "cami", "sene", "otel", "zevk", "okur", "site", "abla", "kilo", "sırt", "paşa", "kriz")
-    val besHarfliKelimeler = listOf("insan", "değil", "ZAMAN", "çocuk", "gider", "neden", "sebep", "kadın", "dünya", "durum", "şekil", "taraf", "hayat", "bilgi", "sonuç", "sorun", "sahip", "yüzde", "olays", "istem", "kitap", "bugün", "erkek", "çevre", "yaşam", "sokak", "tarih", "bölüm", "anlam", "banka", "madde", "karar", "biçim", "haber", "Allah", "parça", "değer", "gelir", "görev", "bölge", "deniz", "vücut", "temel", "resim", "hanım", "hatun", "nokta", "işlem", "orada", "araba", "duygu", "örnek", "duvar", "sanat", "takım", "müzik", "türlü", "kısım", "sabah", "ortam", "düzey", "aşağı", "cevap", "akşam", "hasta", "şehir", "hafta", "hesap", "fiyat", "satış", "içeri", "savaş", "kalan", "sayfa", "kurum", "kağıt", "cadde", "pazar", "sınıf", "güneş", "parti", "yatak", "yazar", "kulak", "sebep", "kural", "firma", "proje", "model", "balık", "görüş", "bahçe", "sevgi", "ekmek", "kurul", "köpek", "istek", "korku", "polis", "fikir", "koşul", "ortak", "hedef", "kenar", "beyin", "çizgi", "süreç", "bakış", "bilim", "ifade", "beden", "çözüm", "seçim", "zarar", "metre", "bitki", "kredi", "imkan", "kanal", "şarkı", "sahne", "aşama", "orman", "düzen", "hücre", "roman", "vergi", "basın", "sınır", "birey", "bebek", "bakan", "boyut", "dergi", "inanç", "üzeri", "giriş", "baskı", "tepki", "cümle", "Tanrı", "tavır", "yayın", "vakit", "daire", "katkı", "yanıt", "burun", "çıkar", "medya", "artış", "yürek", "belge", "etraf", "meyve", "bacak", "kanun", "müdür", "hukuk", "silah", "talep", "asker", "beyan", "besin", "çiçek", "saygı", "ücret", "gider", "örgüt", "boyun", "cihaz", "denge", "kahve", "öteki", "adres", "güven", "marka", "yarar", "gönül", "hayal", "şarap", "altın", "eylem", "kesim", "birim")
-    val altiHarfliKelimeler = listOf("içinde", "devlet", "gerçek", "ilişki", "toplum", "şirket", "kaynak", "gazete", "doktor", "eğitim", "milyon", "kültür", "hizmet", "dikkat", "üretim", "dakika", "derece", "yöntem", "enerji", "sağlık", "teknik", "dışarı", "merkez", "toprak", "trafik", "mutfak", "varlık", "hayvan", "sektör", "yüzyıl", "sigara", "kelime", "başarı", "piyasa", "miktar", "meydan", "yardım", "kardeş", "meslek", "başkan", "numara", "sinema", "kavram", "mektup", "makine", "kalite", "eleman", "günlük", "koltuk", "hikaye", "ağabey", "destek", "otobüs", "sanayi", "millet", "reklam", "geçmiş", "toplam", "dükkan", "servis", "tedavi", "kimlik", "mesele", "sürücü", "milyar", "fırsat", "mağaza", "sözcük", "korgan", "rüzgar", "telefo", "yıldız", "bilinç", "mevcut", "meclis", "yaprak")
-    val yediHarfliKeliemeler = listOf("arkadaş", "özellik", "program", "hareket", "çalışma", "müşteri", "telefon", "düşünce", "ihtiyaç", "gelecek", "öğrenci", "yönetim", "yabancı", "ekonomi", "hükümet", "malzeme", "pencere", "mahalle", "görüntü", "anlayış", "kontrol", "üstünde", "gelişme", "sanatçı", "içerisi", "nitelik", "problem", "ağırlık", "sıkıntı", "yatırım", "tehlike", "işletme", "sigorta", "değişim", "çerçeve", "yetenek", "ticaret", "vitamin", "yumurta"   )
+    val connect = GameConnection(context = context)
+//oyuna aynanda başlama hatalı
+    val dortHarfliKelimeler = listOf(
+        "konu",
+        "olay",
+        "ülke",
+        "adam",
+        "para",
+        "anne",
+        "baba",
+        "süre",
+        "saat",
+        "sıra",
+        "kapı",
+        "gece",
+        "alan",
+        "ürün",
+        "aile",
+        "halk",
+        "akıl",
+        "ayak",
+        "araç",
+        "hava",
+        "sayı",
+        "grup",
+        "soru",
+        "arka",
+        "yazı",
+        "okul",
+        "renk",
+        "yapı",
+        "amaç",
+        "film",
+        "etki",
+        "ışık",
+        "oyun",
+        "oran",
+        "oğul",
+        "lira",
+        "ağız",
+        "masa",
+        "kafa",
+        "spor",
+        "ölüm",
+        "isim",
+        "kent",
+        "önem",
+        "koca",
+        "ilgi",
+        "koku",
+        "ağaç",
+        "bina",
+        "kalp",
+        "şart",
+        "köşe",
+        "bura",
+        "ölçü",
+        "dolu",
+        "izin",
+        "ateş",
+        "fark",
+        "tane",
+        "ders",
+        "defa",
+        "batı",
+        "dost",
+        "plan",
+        "karı",
+        "cilt",
+        "kaza",
+        "adım",
+        "ilaç",
+        "yasa",
+        "ceza",
+        "ilke",
+        "hoca",
+        "adet",
+        "faiz",
+        "hata",
+        "kere",
+        "olma",
+        "deri",
+        "eşya",
+        "aday",
+        "öykü",
+        "uçak",
+        "doğa",
+        "işçi",
+        "kamu",
+        "çaba",
+        "risk",
+        "cami",
+        "sene",
+        "otel",
+        "zevk",
+        "okur",
+        "site",
+        "abla",
+        "kilo",
+        "sırt",
+        "paşa",
+        "kriz"
+    )
+    val besHarfliKelimeler = listOf(
+        "insan",
+        "değil",
+        "ZAMAN",
+        "çocuk",
+        "gider",
+        "neden",
+        "sebep",
+        "kadın",
+        "dünya",
+        "durum",
+        "şekil",
+        "taraf",
+        "hayat",
+        "bilgi",
+        "sonuç",
+        "sorun",
+        "sahip",
+        "yüzde",
+        "olays",
+        "istem",
+        "kitap",
+        "bugün",
+        "erkek",
+        "çevre",
+        "yaşam",
+        "sokak",
+        "tarih",
+        "bölüm",
+        "anlam",
+        "banka",
+        "madde",
+        "karar",
+        "biçim",
+        "haber",
+        "Allah",
+        "parça",
+        "değer",
+        "gelir",
+        "görev",
+        "bölge",
+        "deniz",
+        "vücut",
+        "temel",
+        "resim",
+        "hanım",
+        "hatun",
+        "nokta",
+        "işlem",
+        "orada",
+        "araba",
+        "duygu",
+        "örnek",
+        "duvar",
+        "sanat",
+        "takım",
+        "müzik",
+        "türlü",
+        "kısım",
+        "sabah",
+        "ortam",
+        "düzey",
+        "aşağı",
+        "cevap",
+        "akşam",
+        "hasta",
+        "şehir",
+        "hafta",
+        "hesap",
+        "fiyat",
+        "satış",
+        "içeri",
+        "savaş",
+        "kalan",
+        "sayfa",
+        "kurum",
+        "kağıt",
+        "cadde",
+        "pazar",
+        "sınıf",
+        "güneş",
+        "parti",
+        "yatak",
+        "yazar",
+        "kulak",
+        "sebep",
+        "kural",
+        "firma",
+        "proje",
+        "model",
+        "balık",
+        "görüş",
+        "bahçe",
+        "sevgi",
+        "ekmek",
+        "kurul",
+        "köpek",
+        "istek",
+        "korku",
+        "polis",
+        "fikir",
+        "koşul",
+        "ortak",
+        "hedef",
+        "kenar",
+        "beyin",
+        "çizgi",
+        "süreç",
+        "bakış",
+        "bilim",
+        "ifade",
+        "beden",
+        "çözüm",
+        "seçim",
+        "zarar",
+        "metre",
+        "bitki",
+        "kredi",
+        "imkan",
+        "kanal",
+        "şarkı",
+        "sahne",
+        "aşama",
+        "orman",
+        "düzen",
+        "hücre",
+        "roman",
+        "vergi",
+        "basın",
+        "sınır",
+        "birey",
+        "bebek",
+        "bakan",
+        "boyut",
+        "dergi",
+        "inanç",
+        "üzeri",
+        "giriş",
+        "baskı",
+        "tepki",
+        "cümle",
+        "Tanrı",
+        "tavır",
+        "yayın",
+        "vakit",
+        "daire",
+        "katkı",
+        "yanıt",
+        "burun",
+        "çıkar",
+        "medya",
+        "artış",
+        "yürek",
+        "belge",
+        "etraf",
+        "meyve",
+        "bacak",
+        "kanun",
+        "müdür",
+        "hukuk",
+        "silah",
+        "talep",
+        "asker",
+        "beyan",
+        "besin",
+        "çiçek",
+        "saygı",
+        "ücret",
+        "gider",
+        "örgüt",
+        "boyun",
+        "cihaz",
+        "denge",
+        "kahve",
+        "öteki",
+        "adres",
+        "güven",
+        "marka",
+        "yarar",
+        "gönül",
+        "hayal",
+        "şarap",
+        "altın",
+        "eylem",
+        "kesim",
+        "birim"
+    )
+    val altiHarfliKelimeler = listOf(
+        "içinde",
+        "devlet",
+        "gerçek",
+        "ilişki",
+        "toplum",
+        "şirket",
+        "kaynak",
+        "gazete",
+        "doktor",
+        "eğitim",
+        "milyon",
+        "kültür",
+        "hizmet",
+        "dikkat",
+        "üretim",
+        "dakika",
+        "derece",
+        "yöntem",
+        "enerji",
+        "sağlık",
+        "teknik",
+        "dışarı",
+        "merkez",
+        "toprak",
+        "trafik",
+        "mutfak",
+        "varlık",
+        "hayvan",
+        "sektör",
+        "yüzyıl",
+        "sigara",
+        "kelime",
+        "başarı",
+        "piyasa",
+        "miktar",
+        "meydan",
+        "yardım",
+        "kardeş",
+        "meslek",
+        "başkan",
+        "numara",
+        "sinema",
+        "kavram",
+        "mektup",
+        "makine",
+        "kalite",
+        "eleman",
+        "günlük",
+        "koltuk",
+        "hikaye",
+        "ağabey",
+        "destek",
+        "otobüs",
+        "sanayi",
+        "millet",
+        "reklam",
+        "geçmiş",
+        "toplam",
+        "dükkan",
+        "servis",
+        "tedavi",
+        "kimlik",
+        "mesele",
+        "sürücü",
+        "milyar",
+        "fırsat",
+        "mağaza",
+        "sözcük",
+        "korgan",
+        "rüzgar",
+        "telefo",
+        "yıldız",
+        "bilinç",
+        "mevcut",
+        "meclis",
+        "yaprak"
+    )
+    val yediHarfliKeliemeler = listOf(
+        "arkadaş",
+        "özellik",
+        "program",
+        "hareket",
+        "çalışma",
+        "müşteri",
+        "telefon",
+        "düşünce",
+        "ihtiyaç",
+        "gelecek",
+        "öğrenci",
+        "yönetim",
+        "yabancı",
+        "ekonomi",
+        "hükümet",
+        "malzeme",
+        "pencere",
+        "mahalle",
+        "görüntü",
+        "anlayış",
+        "kontrol",
+        "üstünde",
+        "gelişme",
+        "sanatçı",
+        "içerisi",
+        "nitelik",
+        "problem",
+        "ağırlık",
+        "sıkıntı",
+        "yatırım",
+        "tehlike",
+        "işletme",
+        "sigorta",
+        "değişim",
+        "çerçeve",
+        "yetenek",
+        "ticaret",
+        "vitamin",
+        "yumurta"
+    )
     val harfSayisi = selectedRoom.toInt()
     val harfSabitiVarMi = selectedGameType
     var kutuBoyutu = 70
@@ -91,84 +506,97 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
         )
     }
 
-    //  val turkishLetters = arrayOf("a", "b", "c", "ç", "d", "e", "f", "g", "ğ", "h", "ı", "i", "j", "k", "l", "m", "n", "o", "ö", "p", "r", "s", "ş", "t", "u", "ü", "v", "y", "z")
-  //  var randomNumber = -1
-  //  var selectedLetter = ""
-  //  var kelimeIndex = -1
-
-/*
-    if(harfSabitiVarMi)
-    {
-        randomNumber = Random.nextInt(29)
-        selectedLetter = turkishLetters[randomNumber]
-        kelimeIndex = Random.nextInt(5)
-    }
-*/
     val focusManager = LocalFocusManager.current
     var letters by remember { mutableStateOf(List(harfSayisi) { "" }) }
     val focusRequesters = List(harfSayisi) { FocusRequester() }
     var showGameScreen by remember { mutableStateOf(true) } // Oyun ekranını gösterme durumunu tutan değişken
+    var showCircularProgress by remember { mutableStateOf(false) } // Oyun ekranını gösterme durumunu tutan değişken
     val textColorList = remember { mutableStateListOf<Color>() } // Harf renkleri için liste
+    val coroutineScope = rememberCoroutineScope()
+    var playerStatus by remember { mutableStateOf("") }
+    if (user != null) {
 
+        LaunchedEffect(key1 = user.uid) {
+            val userId = user.uid
+            val db = FirebaseFirestore.getInstance()
+            val playerPath = "game_rooms/$selectedGameType/rooms/$selectedRoom/gamer/$userId"
+
+            db.document(playerPath).addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.e("ListenForStatusChange", "Listening failed.", e)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val status = snapshot.getString("status") ?: ""
+                    coroutineScope.launch {
+                        playerStatus = status
+                    }
+                }
+            }
+        }
+
+
+    when (playerStatus) {
+        "kazanan" -> {
+            // Kazanan için UI
+            AlertDialog(
+                onDismissRequest = { showErrorDialog = false },
+                title = { Text(text = "Tebrikler!") },
+                text = { Text(text = "Oyunu kazandınız.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
+                            navController.popBackStack() }
+                    ) {
+                        Text("Tamam")
+                    }
+                }
+            )
+        }
+
+        "kaybeden" -> {
+            // Kaybeden için UI
+            AlertDialog(
+                onDismissRequest = { showErrorDialog = false },
+                title = { Text(text = "Üzgünüz!") },
+                text = { Text(text = "Oyunu kaybettiniz.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
+                            navController.popBackStack() }
+                    ) {
+                        Text("Tamam")
+                    }
+                }
+            )
+        }
+    }
+}
     if (textColorList.isEmpty()) {
         repeat(harfSayisi) {
             textColorList.add(Color.Black)
         }
     }
 
-     if(harfSayisi == 5)
-     {
-         kutuBoyutu = 55
-         kutuMesafesi = 12
-         yazıBoyutu = 24
-
-/*
-         if(harfSabitiVarMi)
-         {
-             randomNumber = Random.nextInt(29)
-             selectedLetter = turkishLetters[randomNumber]
-             kelimeIndex = Random.nextInt(6)
-         }
-         */
-
-     }
-
-    else if(harfSayisi == 6)
-     {
-         kutuBoyutu = 45
-         kutuMesafesi = 8
-         yazıBoyutu = 16
-         /*
-         if(harfSabitiVarMi)
-         {
-             randomNumber = Random.nextInt(29)
-             selectedLetter = turkishLetters[randomNumber]
-             kelimeIndex = Random.nextInt(7)
-         }
+    if (harfSayisi == 5) {
+        kutuBoyutu = 55
+        kutuMesafesi = 12
+        yazıBoyutu = 24
 
 
-          */
-     }
+    } else if (harfSayisi == 6) {
+        kutuBoyutu = 45
+        kutuMesafesi = 8
+        yazıBoyutu = 16
+    } else if (harfSayisi == 7) {
+        kutuBoyutu = 35
+        kutuMesafesi = 4
+        yazıBoyutu = 8
+    }
 
-     else if(harfSayisi == 7)
-     {
-         kutuBoyutu = 35
-         kutuMesafesi = 4
-         yazıBoyutu = 8
-
-/*
-         if(harfSabitiVarMi)
-         {
-             randomNumber = Random.nextInt(29)
-             selectedLetter = turkishLetters[randomNumber]
-              kelimeIndex = Random.nextInt(8)
-         }
-
- */
-     }
-
-   if(connect)
-    {
+    if (connect) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -227,19 +655,65 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
 
 
                 } else {
+                    var showSnackbar by remember { mutableStateOf("") }
 
-                    val snackbarHostState = remember { SnackbarHostState() }
+                    listenForGameReadyStatus(selectedGameType, selectedRoom) { readyStatusList ->
+                        val readyPlayers =
+                            readyStatusList.filter { it.isReady }.joinToString { it.userId }
+                        showSnackbar = if (readyPlayers == user?.uid) {
+                            "a"
+                        } else if (readyPlayers.isEmpty()) {
+                            "c"
+                        } else {
+                            "b"
+                        }
+                    }
+                    if (showSnackbar == "a") {
+                        showCircularProgress = false
+                        val snackbarHostState = remember { SnackbarHostState() }
 
-                    LaunchedEffect(key1 = true) {
-                        snackbarHostState.showSnackbar(
-                            message = "Süre doldu! Oyunu kaybettin. Oda ekranına yönlendiriliyorsun.",
-                            duration = SnackbarDuration.Short
-                        )
-                        delay(2000) // 2 saniye bekleyin
-                        navController.popBackStack() // Oda ekranına geri dön
+                        LaunchedEffect(key1 = true) {
+                            snackbarHostState.showSnackbar(
+                                message = "Rakip oyuncu kelime girişi yapmadı. Oyunu kazandınız.",
+                                duration = SnackbarDuration.Short
+                            )
+                            delay(2000) // 2 saniye bekleyin
+                            navController.popBackStack() // Oda ekranına geri dön
+                        }
+
+                        SnackbarHost(hostState = snackbarHostState)
+                    } else if (showSnackbar == "b") {
+                        showCircularProgress = false
+                        val snackbarHostState = remember { SnackbarHostState() }
+
+                        LaunchedEffect(key1 = true) {
+                            snackbarHostState.showSnackbar(
+                                message = "Kelime girişi yapmadınız. Oyunu kaybettiniz.",
+                                duration = SnackbarDuration.Short
+                            )
+                            delay(2000) // 2 saniye bekleyin
+                            navController.popBackStack() // Oda ekranına geri dön
+                        }
+
+                        SnackbarHost(hostState = snackbarHostState)
+                    } else if (showSnackbar == "c") {
+                        showCircularProgress = false
+                        val snackbarHostState = remember { SnackbarHostState() }
+
+                        LaunchedEffect(key1 = true) {
+                            snackbarHostState.showSnackbar(
+                                message = "Kelime girişi yapılmadı oyun tekrar başlıyor.",
+                                duration = SnackbarDuration.Short
+                            )
+                            delay(2000) // 2 saniye bekleyin
+                            //navController.popBackStack() // Oda ekranına geri dön
+                            navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
+
+                        }
+
+                        SnackbarHost(hostState = snackbarHostState)
                     }
 
-                    SnackbarHost(hostState = snackbarHostState)
                 }
 
                 Text(text = "Kullanıcı 1", modifier = Modifier.padding(bottom = 24.dp))
@@ -260,13 +734,11 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
                                     }
                                 }
                                 // Focus değişikliklerini yönet
-                                if (value.length == 1 && index == 2) { // Eğer kullanıcı 2. indexe (üçüncü kutuya) değer girerse
+                                if (value.length == 1 && index == 2 && harfSabitiVarMi) { // Eğer kullanıcı 2. indexe (üçüncü kutuya) değer girerse
                                     focusRequesters[4].requestFocus() // Doğrudan 4. indexe (beşinci kutuya) odaklan
                                     letters = letters.toMutableList().also {
                                         it[index + 1] = "A".singleOrNull()?.toString() ?: ""
                                     }
-
-
                                 }
                                 if (value.length == 1 && index < letters.lastIndex) {
                                     focusRequesters[index + 1].requestFocus()
@@ -286,6 +758,28 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
                         if (index < letters.lastIndex) Spacer(Modifier.width(kutuMesafesi.dp))
                     }
                 }
+                if (showCircularProgress) {
+                    Dialog(onDismissRequest = { /* Geri sayım sırasında dialog kapatılamaz */ }) {
+                        // Dialog içeriğinde yalnızca geri sayımı göster
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .background(Color.Black.copy(alpha = 0.5f)) // Arka planı yarı saydam siyah yap
+                                .padding(32.dp) // İçerik ve kenarlar arasında boşluk bırak
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator(color = Color.White) // Yükleniyor simgesi
+                                Spacer(modifier = Modifier.height(16.dp)) // Simge ve metin arasında boşluk
+                                Text(
+                                    "Rakip oyuncu bekleniyor.",
+                                    color = Color.White // Metin rengi
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Button(
 
@@ -301,7 +795,20 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
                                 showErrorDialog = true
 
                             } else {
-                                showGameScreen = false
+                                if (user != null) {
+                                    updateGamerWordInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        user.uid,
+                                        enteredWord
+                                    )
+                                    showCircularProgress = true
+                                }
+                                listenForGameStart(selectedGameType, selectedRoom) {
+                                    showGameScreen = false
+                                    showCircularProgress = false
+
+                                }
                             }
 
                         } else if (harfSayisi == 5) {
@@ -309,7 +816,20 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
                                 showErrorDialog = true
 
                             } else {
-                                showGameScreen = false
+                                if (user != null) {
+                                    updateGamerWordInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        user.uid,
+                                        enteredWord
+                                    )
+                                    showCircularProgress = true
+                                }
+                                listenForGameStart(selectedGameType, selectedRoom) {
+                                    showGameScreen = false
+                                    showCircularProgress = false
+
+                                }
                             }
 
                         } else if (harfSayisi == 6) {
@@ -317,7 +837,20 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
                                 showErrorDialog = true
 
                             } else {
-                                showGameScreen = false
+                                if (user != null) {
+                                    updateGamerWordInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        user.uid,
+                                        enteredWord
+                                    )
+                                    showCircularProgress = true
+                                }
+                                listenForGameStart(selectedGameType, selectedRoom) {
+                                    showGameScreen = false
+                                    showCircularProgress = false
+                                }
+
                             }
 
                         } else if (harfSayisi == 7) {
@@ -326,7 +859,20 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
                                 showErrorDialog = true
 
                             } else {
-                                showGameScreen = false
+                                if (user != null) {
+                                    updateGamerWordInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        user.uid,
+                                        enteredWord
+                                    )
+                                    showCircularProgress = true
+                                }
+                                listenForGameStart(selectedGameType, selectedRoom) {
+                                    showGameScreen = false
+                                    showCircularProgress = false
+
+                                }
                             }
 
                         }
@@ -345,112 +891,146 @@ fun GameScreen(navController: NavController, selectedGameType: Boolean, selected
             }
 
             if (!showGameScreen) {
-                val bulunacakKelime = "DIŞARI"
-                LetterGrid(
-                    harfSayisi,
-                    kutuBoyutu,
-                    kutuMesafesi,
-                    yazıBoyutu,
-                    dortHarfliKelimeler,
-                    besHarfliKelimeler,
-                    altiHarfliKelimeler,
-                    yediHarfliKeliemeler,
-                    bulunacakKelime,
-                    navController
-                )
-
+                var bulunacakKelime by remember { mutableStateOf("") } //
+                if (user != null) {
+                    listenForOtherGamerWord(
+                        selectedGameType,
+                        selectedRoom,
+                        user.uid
+                    ) { otherGamerWord ->
+                        bulunacakKelime = otherGamerWord
+                        Log.d("kelimeeeeee", bulunacakKelime)
+                    }
+                    LetterGrid(
+                        harfSayisi,
+                        kutuBoyutu,
+                        kutuMesafesi,
+                        yazıBoyutu,
+                        dortHarfliKelimeler,
+                        besHarfliKelimeler,
+                        altiHarfliKelimeler,
+                        yediHarfliKeliemeler,
+                        bulunacakKelime,
+                        selectedGameType,
+                        selectedRoom,
+                        user.uid,
+                        navController
+                    )
+                }
             }
 
         }
 
-        GameExit()
+        if (user != null) {
+            GameExit(selectedGameType, selectedRoom, user.uid)
+        }
+    } else {
+        var isTimerRunning by remember { mutableStateOf(true) } // Timer'ın çalışıp çalışmadığını kontrol eden fla
+
+        var timeLeft by remember { mutableStateOf(10) }
+
+        val progress = remember(timeLeft, 10) {
+            (timeLeft.toFloat() / 10.toFloat())
+        }
+
+        LaunchedEffect(key1 = timeLeft) {
+            if (timeLeft > 0) {
+                delay(1000) // 1 saniye bekleyin
+                timeLeft-- // Zamanı azalt
+            } else {
+                isTimerRunning = false
+
+            }
+        }
+
+
+
+        if (isTimerRunning) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            )
+            {
+                Box(
+
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+
+                ) {
+                    CircularProgressIndicator(
+                        progress = progress,
+                        color = Color.Gray,
+                        strokeWidth = 4.dp,
+                        modifier = Modifier.size(50.dp)
+                    )
+                    Text(
+                        text = "$timeLeft",
+                        fontSize = 12.sp,
+                        color = Color.Black
+                    )
+                }
+            }
+
+
+        } else {
+            var showErrorDialog by remember { mutableStateOf(false) }
+            if (showErrorDialog) {
+                AlertDialog(
+                    onDismissRequest = { showErrorDialog = false },
+                    title = { Text(text = "Bağlantı Hatası") },
+                    text = { Text(text = "Oyunu Kaybettin") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showErrorDialog = false
+                                if (user != null) {
+                                    updateGamerWinnerInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        user.uid,
+                                        "kaybeden",
+                                        "kazanan"
+                                    ) {
+                                        navController.popBackStack()
+                                    }
+                                }
+
+                            }
+                        ) {
+                            Text("Tamam")
+                        }
+                    }
+                )
+            }
+
+
+        }
+
     }
-
-
-    else
-   {
-       var isTimerRunning by remember { mutableStateOf(true) } // Timer'ın çalışıp çalışmadığını kontrol eden fla
-
-       var timeLeft by remember { mutableStateOf(10) }
-
-       val progress = remember(timeLeft, 10) {
-           (timeLeft.toFloat() / 10.toFloat())
-       }
-
-       LaunchedEffect(key1 = timeLeft) {
-           if (timeLeft > 0) {
-               delay(1000) // 1 saniye bekleyin
-               timeLeft-- // Zamanı azalt
-           } else {
-               isTimerRunning = false
-
-           }
-       }
-
-
-
-       if (isTimerRunning) {
-           Row(
-               modifier = Modifier.fillMaxWidth(),
-               horizontalArrangement = Arrangement.End
-           )
-           {
-               Box(
-
-                   contentAlignment = Alignment.Center,
-                   modifier = Modifier
-                       .size(50.dp)
-                       .clip(RoundedCornerShape(16.dp))
-                       .background(Color.White)
-
-               ) {
-                   CircularProgressIndicator(
-                       progress = progress,
-                       color = Color.Gray,
-                       strokeWidth = 4.dp,
-                       modifier = Modifier.size(50.dp)
-                   )
-                   Text(
-                       text = "$timeLeft",
-                       fontSize = 12.sp,
-                       color = Color.Black
-                   )
-               }
-           }
-
-
-       }
-
-       else
-       {
-           var showErrorDialog by remember { mutableStateOf(false) }
-           if (showErrorDialog) {
-               AlertDialog(
-                   onDismissRequest = { showErrorDialog = false },
-                   title = { Text(text = "Bağlantı Hatası") },
-                   text = { Text(text = "Oyunu Kaybettin") },
-                   confirmButton = {
-                       Button(
-                           onClick = { showErrorDialog = false
-                               navController.popBackStack() }
-                       ) {
-                           Text("Tamam")
-                       }
-                   }
-               )
-           }
-
-
-       }
-
-   }
 
 }
 
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
-fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: Int,dortHarfliKelimeler: List<String>,besHarfliKelimeler: List<String>,altiHarfliKelimeler: List<String>,yediHarfliKelimeler: List<String>,bulunacakKelime: String,navController: NavController) {
+fun LetterGrid(
+    harfSayisi: Int,
+    kutuBoyutu: Int,
+    kutuMesafesi: Int,
+    YaziBoyutu: Int,
+    dortHarfliKelimeler: List<String>,
+    besHarfliKelimeler: List<String>,
+    altiHarfliKelimeler: List<String>,
+    yediHarfliKelimeler: List<String>,
+    bulunacakKelime: String,
+    selectedGameType: Boolean,
+    selectedRoom: String,
+    userId: String,
+    navController: NavController
+) {
 
     var rnd = -1
 
@@ -480,15 +1060,24 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
             text = { Text(text = "Doğru kelime bulundu") },
             confirmButton = {
                 Button(
-                    onClick = { showErrorDialog2 = false
-                        navController.popBackStack() }
+                    onClick = {
+                        showErrorDialog2 = false
+                        updateGamerWinnerInRoom(
+                            selectedGameType,
+                            selectedRoom,
+                            userId,
+                            "kazanan",
+                            "kaybeden"
+                        ) {navController.popBackStack()
+                        }
+
+                    }
                 ) {
                     Text("Tamam")
                 }
             }
         )
     }
-
 
 
     var showErrorDialog3 by remember { mutableStateOf(false) }
@@ -499,8 +1088,18 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
             text = { Text(text = "Uzun süre tahmin yapmadığınız için oyunu kaybettiniz") },
             confirmButton = {
                 Button(
-                    onClick = { showErrorDialog3 = false
-                        navController.popBackStack()}
+                    onClick = {
+                        showErrorDialog3 = false
+                        updateGamerWinnerInRoom(
+                            selectedGameType,
+                            selectedRoom,
+                            userId,
+                            "kaybeden",
+                            "kazanan"
+                        ) {navController.popBackStack()
+                        }
+
+                    }
                 ) {
                     Text("Tamam")
                 }
@@ -523,8 +1122,7 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
         }
     }
 
-    if(rakipOyunucKelimeyiBulamadiMi)
-    {
+    if (rakipOyunucKelimeyiBulamadiMi) {
         timeLeft = 0
         isTimerRunning = false
     }
@@ -537,8 +1135,7 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
 
 
 
-    if(!isTimerRunning)
-    {
+    if (!isTimerRunning) {
 
         LaunchedEffect(key1 = timeLeft1) {
             if (timeLeft1 > 0) {
@@ -551,9 +1148,7 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
         }
 
 
-        if (isTimerRunning1)
-
-        {
+        if (isTimerRunning1) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -583,21 +1178,15 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
             }
 
 
-        }
-
-        else
-        {
-            if(rakipOyunucKelimeyiBulamadiMi)
-            {
+        } else {
+            if (rakipOyunucKelimeyiBulamadiMi) {
                 isTimerRunning = false
 
-                rnd =   Random.nextInt(0, 20)
+                rnd = Random.nextInt(0, 20)
 
                 zamanindaTahminYapılmadiMi = true
 
-            }
-            else
-            {
+            } else {
                 showErrorDialog3 = true
 
             }
@@ -608,7 +1197,6 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
 
 
     }
-
 
 
     var enteredWord1 = ""
@@ -626,7 +1214,7 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
     val textColorList = remember { mutableStateListOf<Color>() } // Harf renkleri için liste
 
     if (textColorList.isEmpty()) {
-        repeat(harfSayisi*harfSayisi) {
+        repeat(harfSayisi * harfSayisi) {
             textColorList.add(Color.Black)
         }
     }
@@ -635,93 +1223,96 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
     val keyboardController = LocalSoftwareKeyboardController.current
     Column(modifier = Modifier.padding(16.dp)) {
         for (i in 0 until totalSize step gridSize) {
-            Row(horizontalArrangement = Arrangement.spacedBy((kutuMesafesi-2).dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy((kutuMesafesi - 2).dp)) {
                 for (j in i until i + gridSize) {
                     if (zamanindaTahminYapılmadiMi) {
 
 
-                        var rastgeleKelime= ""
-                        if(harfSayisi == 4)
-                        {
+                        var rastgeleKelime = ""
+                        if (harfSayisi == 4) {
                             val randomInRange = Random.nextInt(0, 20)
                             rastgeleKelime = dortHarfliKelimeler[randomInRange]
 
                         }
-                        if(harfSayisi == 5)
-                        {
+                        if (harfSayisi == 5) {
                             val randomInRange = Random.nextInt(0, 20)
                             rastgeleKelime = besHarfliKelimeler[randomInRange]
 
                         }
-                        if(harfSayisi == 6)
-                        {
+                        if (harfSayisi == 6) {
                             val randomInRange = Random.nextInt(0, 20)
                             rastgeleKelime = altiHarfliKelimeler[randomInRange]
 
                         }
-                        if(harfSayisi == 7)
-                        {
+                        if (harfSayisi == 7) {
                             val randomInRange = Random.nextInt(0, 20)
                             rastgeleKelime = yediHarfliKelimeler[randomInRange]
 
                         }
 
-                        focusRequesters[harfSayisi*currentRow].requestFocus() // Doğrudan 4. indexe (beşinci kutuya) odaklan
+                        focusRequesters[harfSayisi * currentRow].requestFocus() // Doğrudan 4. indexe (beşinci kutuya) odaklan
                         letters = letters.toMutableList().also {
-                            it[0 + harfSayisi*currentRow] = rastgeleKelime[0].toString().toUpperCase().singleOrNull()?.toString() ?: ""
-                            it[1 + harfSayisi*currentRow] =  rastgeleKelime[1].toString().toUpperCase().singleOrNull()?.toString() ?: ""
-                            it[2 + harfSayisi*currentRow] =  rastgeleKelime[2].toString().toUpperCase().singleOrNull()?.toString() ?: ""
-                            it[3 + harfSayisi*currentRow] =  rastgeleKelime[3].toString().toUpperCase().singleOrNull()?.toString() ?: ""
-                            if(harfSayisi>=5){ it[4 + harfSayisi*currentRow] =  rastgeleKelime[4].toString().toUpperCase().singleOrNull()?.toString() ?: "" }
-                            if(harfSayisi>=6) { it[5 + harfSayisi * currentRow] = rastgeleKelime[5].toString().toUpperCase().singleOrNull()?.toString() ?: "" }
-                            if(harfSayisi>=7) {it[6 + harfSayisi*currentRow] =  rastgeleKelime[6].toString().toUpperCase().singleOrNull()?.toString() ?: ""}
+                            it[0 + harfSayisi * currentRow] =
+                                rastgeleKelime[0].toString().toUpperCase().singleOrNull()
+                                    ?.toString() ?: ""
+                            it[1 + harfSayisi * currentRow] =
+                                rastgeleKelime[1].toString().toUpperCase().singleOrNull()
+                                    ?.toString() ?: ""
+                            it[2 + harfSayisi * currentRow] =
+                                rastgeleKelime[2].toString().toUpperCase().singleOrNull()
+                                    ?.toString() ?: ""
+                            it[3 + harfSayisi * currentRow] =
+                                rastgeleKelime[3].toString().toUpperCase().singleOrNull()
+                                    ?.toString() ?: ""
+                            if (harfSayisi >= 5) {
+                                it[4 + harfSayisi * currentRow] =
+                                    rastgeleKelime[4].toString().toUpperCase().singleOrNull()
+                                        ?.toString() ?: ""
+                            }
+                            if (harfSayisi >= 6) {
+                                it[5 + harfSayisi * currentRow] =
+                                    rastgeleKelime[5].toString().toUpperCase().singleOrNull()
+                                        ?.toString() ?: ""
+                            }
+                            if (harfSayisi >= 7) {
+                                it[6 + harfSayisi * currentRow] =
+                                    rastgeleKelime[6].toString().toUpperCase().singleOrNull()
+                                        ?.toString() ?: ""
+                            }
 
 
 
-                                    for (i in 0 until harfSayisi) {
+                            for (i in 0 until harfSayisi) {
 
-                                        println(rastgeleKelime[i] + " " + bulunacakKelime[i])
-                                        if(rastgeleKelime[i].toUpperCase()== bulunacakKelime[i])
-                                        {
-                                            textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                        }
+                                println(rastgeleKelime[i] + " " + bulunacakKelime[i])
+                                if (rastgeleKelime[i].toUpperCase() == bulunacakKelime[i]) {
+                                    textColorList[i + harfSayisi * currentRow] =
+                                        Color(android.graphics.Color.parseColor("#0AA351"))
+                                } else {
+                                    for (j in 0 until harfSayisi) {
+                                        println(rastgeleKelime[j] + " " + bulunacakKelime[j])
 
-                                        else{
-                                            for (j in 0 until harfSayisi)
-                                            {
-                                                println(rastgeleKelime[j] + " " + bulunacakKelime[j])
-
-                                                if(rastgeleKelime[i].toUpperCase() == bulunacakKelime[j] && i!=j)
-                                                {
-                                                    textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#F2F90C"))
-                                                }
-
-                                            }
+                                        if (rastgeleKelime[i].toUpperCase() == bulunacakKelime[j] && i != j) {
+                                            textColorList[i + harfSayisi * currentRow] =
+                                                Color(android.graphics.Color.parseColor("#F2F90C"))
                                         }
 
                                     }
+                                }
 
-                                    if(bulunacakKelime.equals(rastgeleKelime))
-                                    {
-                                        showErrorDialog2 = true
+                            }
 
-                                    }
+                            if (bulunacakKelime.equals(rastgeleKelime)) {
+                                showErrorDialog2 = true
 
-
-
-
-
-
+                            }
                             zamanindaTahminYapılmadiMi = false
                             // zamanı tekrardan sıfırla 10 saniyer kelime boyutunaa göre indexleri ayarla rastgele kelime seç harfleri ona göre ayarla
                             timeLeft1 = 10
                             isTimerRunning1 = true
                             currentRow++
 
-
-
                         }
-
 
 
                     }
@@ -733,10 +1324,12 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
 
                         onValueChange = { value ->
                             if (value.length <= 1) {
-                           //     letters = letters.toMutableList().also { it[index] = value.uppercase().singleOrNull()?.toString() ?: "" }
+                                //     letters = letters.toMutableList().also { it[index] = value.uppercase().singleOrNull()?.toString() ?: "" }
 
 
-                                    letters = letters.toMutableList().also { it[j] = value.uppercase().singleOrNull()?.toString() ?: "" }
+                                letters = letters.toMutableList().also {
+                                    it[j] = value.uppercase().singleOrNull()?.toString() ?: ""
+                                }
 
 
                                 if (value.length == 1 && j < (i + gridSize - 1)) {
@@ -745,7 +1338,11 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
                             }
                         },
 
-                        focusRequester = focusRequesters[j],kutuBoyutu,kutuMesafesi,YaziBoyutu, textColorList = textColorList,
+                        focusRequester = focusRequesters[j],
+                        kutuBoyutu,
+                        kutuMesafesi,
+                        YaziBoyutu,
+                        textColorList = textColorList,
                         index = j
                     )
 
@@ -761,32 +1358,29 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
         Button(
             onClick = {
                 timeLeft1 = 10
-                if(rakipOyunucKelimeyiBulamadiMi)
-                {
+                if (rakipOyunucKelimeyiBulamadiMi) {
                     timeLeft = 0
                     isTimerRunning = false
-                }
-
-                else
-                {
+                } else {
                     timeLeft = 60
                     isTimerRunning = true
                 }
 
                 isTimerRunning1 = true
 
-            println("burdaaaa1")
-                if (letters.slice(currentRow * gridSize until (currentRow + 1) * gridSize).all { it.isNotEmpty() }) {
+                println("burdaaaa1")
+                if (letters.slice(currentRow * gridSize until (currentRow + 1) * gridSize)
+                        .all { it.isNotEmpty() }
+                ) {
                     println("burdaaaa2")
                     if (currentRow <= gridSize - 1) {
 
                         println("burdaaaa3")
-                        if(currentRow == 0)
-                        {
+                        if (currentRow == 0) {
                             enteredWord1 = letters.joinToString(separator = "")
                             enteredWord1 = enteredWord1.takeLast(harfSayisi)
                             println(enteredWord1)
-                            var sonuc =  KelimeVarmi(
+                            var sonuc = KelimeVarmi(
                                 kelime = enteredWord1,
                                 dortHarfliKelimeler = dortHarfliKelimeler,
                                 besHarfliKelimeler = besHarfliKelimeler,
@@ -795,22 +1389,18 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
                                 harfSayisi = harfSayisi
                             )
 
-                            if(sonuc){
+                            if (sonuc) {
 
                                 for (i in 0 until harfSayisi) {
 
-                                    if(enteredWord1[i] == bulunacakKelime[i])
-                                    {
-                                        textColorList[i] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                    }
-
-
-                                    else{
-                                        for (j in 0 until harfSayisi)
-                                        {
-                                            if(enteredWord1[i] == bulunacakKelime[j] && i!=j)
-                                            {
-                                                textColorList[i] = Color(android.graphics.Color.parseColor("#F2F90C"))
+                                    if (enteredWord1[i] == bulunacakKelime[i]) {
+                                        textColorList[i] =
+                                            Color(android.graphics.Color.parseColor("#0AA351"))
+                                    } else {
+                                        for (j in 0 until harfSayisi) {
+                                            if (enteredWord1[i] == bulunacakKelime[j] && i != j) {
+                                                textColorList[i] =
+                                                    Color(android.graphics.Color.parseColor("#F2F90C"))
                                             }
 
                                         }
@@ -818,8 +1408,7 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
 
                                 }
 
-                                if(bulunacakKelime.equals(enteredWord1))
-                                {
+                                if (bulunacakKelime.equals(enteredWord1)) {
                                     showErrorDialog2 = true
 
                                 }
@@ -827,19 +1416,15 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
 
                                 currentRow++
                                 focusRequesters[currentRow * gridSize].requestFocus()
-                            }
-
-                            else{
+                            } else {
                                 showErrorDialog = true
                             }
 
-                        }
-                     else   if(currentRow == 1)
-                        {
+                        } else if (currentRow == 1) {
                             enteredWord2 = letters.joinToString(separator = "")
                             enteredWord2 = enteredWord2.takeLast(harfSayisi)
                             println(enteredWord2)
-                            var sonuc =  KelimeVarmi(
+                            var sonuc = KelimeVarmi(
                                 kelime = enteredWord2,
                                 dortHarfliKelimeler = dortHarfliKelimeler,
                                 besHarfliKelimeler = besHarfliKelimeler,
@@ -848,53 +1433,44 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
                                 harfSayisi = harfSayisi
                             )
 
-                            if(sonuc){
+                            if (sonuc) {
 
                                 for (i in 0 until harfSayisi) {
 
-                                    if(enteredWord2[i] == bulunacakKelime[i])
-                                    {
-                                        textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                    }
-
-                                    else{
-                                        for (j in 0 until harfSayisi)
-                                        {
-                                            if(enteredWord2[i] == bulunacakKelime[j] && i!=j)
-                                            {
-                                                textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#F2F90C"))
+                                    if (enteredWord2[i] == bulunacakKelime[i]) {
+                                        textColorList[i + harfSayisi * currentRow] =
+                                            Color(android.graphics.Color.parseColor("#0AA351"))
+                                    } else {
+                                        for (j in 0 until harfSayisi) {
+                                            if (enteredWord2[i] == bulunacakKelime[j] && i != j) {
+                                                textColorList[i + harfSayisi * currentRow] =
+                                                    Color(android.graphics.Color.parseColor("#F2F90C"))
                                             }
 
                                         }
                                     }
 
 
-
                                 }
 
 
 
-                                if(bulunacakKelime.equals(enteredWord2))
-                                {
+                                if (bulunacakKelime.equals(enteredWord2)) {
                                     showErrorDialog2 = true
                                 }
                                 currentRow++
                                 focusRequesters[currentRow * gridSize].requestFocus()
-                            }
-
-                            else{
+                            } else {
                                 showErrorDialog = true
                             }
 
 
-                        }
-                     else   if(currentRow == 2)
-                        {
+                        } else if (currentRow == 2) {
                             enteredWord3 = letters.joinToString(separator = "")
                             enteredWord3 = enteredWord3.takeLast(harfSayisi)
                             println(enteredWord3)
 
-                            var sonuc =  KelimeVarmi(
+                            var sonuc = KelimeVarmi(
                                 kelime = enteredWord3,
                                 dortHarfliKelimeler = dortHarfliKelimeler,
                                 besHarfliKelimeler = besHarfliKelimeler,
@@ -903,55 +1479,46 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
                                 harfSayisi = harfSayisi
                             )
 
-                            if(sonuc){
+                            if (sonuc) {
 
 
                                 for (i in 0 until harfSayisi) {
 
-                                    if(enteredWord3[i] == bulunacakKelime[i])
-                                    {
-                                        textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                    }
-
-                                    else{
-                                        for (j in 0 until harfSayisi)
-                                        {
-                                            if(enteredWord3[i] == bulunacakKelime[j] && i!=j)
-                                            {
-                                                textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#F2F90C"))
+                                    if (enteredWord3[i] == bulunacakKelime[i]) {
+                                        textColorList[i + harfSayisi * currentRow] =
+                                            Color(android.graphics.Color.parseColor("#0AA351"))
+                                    } else {
+                                        for (j in 0 until harfSayisi) {
+                                            if (enteredWord3[i] == bulunacakKelime[j] && i != j) {
+                                                textColorList[i + harfSayisi * currentRow] =
+                                                    Color(android.graphics.Color.parseColor("#F2F90C"))
                                             }
 
                                         }
                                     }
 
 
-
                                 }
 
 
 
-                                if(bulunacakKelime.equals(enteredWord3))
-                                {
+                                if (bulunacakKelime.equals(enteredWord3)) {
                                     showErrorDialog2 = true
 
                                 }
                                 currentRow++
                                 focusRequesters[currentRow * gridSize].requestFocus()
-                            }
-
-                            else{
+                            } else {
                                 showErrorDialog = true
                             }
 
 
-                        }
-                     else   if(currentRow == 3)
-                        {
+                        } else if (currentRow == 3) {
                             enteredWord4 = letters.joinToString(separator = "")
                             enteredWord4 = enteredWord4.takeLast(harfSayisi)
                             println(enteredWord4)
 
-                            var sonuc =  KelimeVarmi(
+                            var sonuc = KelimeVarmi(
                                 kelime = enteredWord4,
                                 dortHarfliKelimeler = dortHarfliKelimeler,
                                 besHarfliKelimeler = besHarfliKelimeler,
@@ -960,57 +1527,47 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
                                 harfSayisi = harfSayisi
                             )
 
-                            if(sonuc){
-
+                            if (sonuc) {
 
 
                                 for (i in 0 until harfSayisi) {
 
-                                    if(enteredWord4[i] == bulunacakKelime[i])
-                                    {
-                                        textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                    }
-
-                                    else{
-                                        for (j in 0 until harfSayisi)
-                                        {
-                                            if(enteredWord4[i] == bulunacakKelime[j] && i!=j)
-                                            {
-                                                textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#F2F90C"))
+                                    if (enteredWord4[i] == bulunacakKelime[i]) {
+                                        textColorList[i + harfSayisi * currentRow] =
+                                            Color(android.graphics.Color.parseColor("#0AA351"))
+                                    } else {
+                                        for (j in 0 until harfSayisi) {
+                                            if (enteredWord4[i] == bulunacakKelime[j] && i != j) {
+                                                textColorList[i + harfSayisi * currentRow] =
+                                                    Color(android.graphics.Color.parseColor("#F2F90C"))
                                             }
 
                                         }
                                     }
 
 
-
                                 }
 
 
-                                if(bulunacakKelime.equals(enteredWord4))
-                                {showErrorDialog2 = true}
-
+                                if (bulunacakKelime.equals(enteredWord4)) {
+                                    showErrorDialog2 = true
+                                }
                                 currentRow++
-                                if(harfSayisi>currentRow)
-                                focusRequesters[currentRow * gridSize].requestFocus()
-                            }
-
-                            else{
+                                if (harfSayisi > currentRow)
+                                    focusRequesters[currentRow * gridSize].requestFocus()
+                            } else {
                                 showErrorDialog = true
                             }
 
 
-                        }
-
-                     else   if(currentRow == 4 && harfSayisi>=5)
-                        {
+                        } else if (currentRow == 4 && harfSayisi >= 5) {
 
                             enteredWord5 = letters.joinToString(separator = "")
                             enteredWord5 = enteredWord5.takeLast(harfSayisi)
-                            println(enteredWord5  + "aaaaaa")
+                            println(enteredWord5 + "aaaaaa")
 
 
-                            var sonuc =  KelimeVarmi(
+                            var sonuc = KelimeVarmi(
                                 kelime = enteredWord5,
                                 dortHarfliKelimeler = dortHarfliKelimeler,
                                 besHarfliKelimeler = besHarfliKelimeler,
@@ -1019,57 +1576,48 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
                                 harfSayisi = harfSayisi
                             )
 
-                            if(sonuc){
+                            if (sonuc) {
 
 
                                 for (i in 0 until harfSayisi) {
 
-                                    if(enteredWord5[i] == bulunacakKelime[i])
-                                    {
-                                        textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                    }
-
-                                    else{
-                                        for (j in 0 until harfSayisi)
-                                        {
-                                            if(enteredWord5[i] == bulunacakKelime[j] && i!=j)
-                                            {
-                                                textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#F2F90C"))
+                                    if (enteredWord5[i] == bulunacakKelime[i]) {
+                                        textColorList[i + harfSayisi * currentRow] =
+                                            Color(android.graphics.Color.parseColor("#0AA351"))
+                                    } else {
+                                        for (j in 0 until harfSayisi) {
+                                            if (enteredWord5[i] == bulunacakKelime[j] && i != j) {
+                                                textColorList[i + harfSayisi * currentRow] =
+                                                    Color(android.graphics.Color.parseColor("#F2F90C"))
                                             }
 
                                         }
                                     }
 
 
-
                                 }
 
 
 
-                                if(bulunacakKelime.equals(enteredWord5))
-                                {showErrorDialog2 = true
+                                if (bulunacakKelime.equals(enteredWord5)) {
+                                    showErrorDialog2 = true
                                     println(enteredWord5)
                                 }
                                 currentRow++
-                                if(harfSayisi>currentRow)
-                                focusRequesters[currentRow * gridSize].requestFocus()
-                            }
-
-                            else{
+                                if (harfSayisi > currentRow)
+                                    focusRequesters[currentRow * gridSize].requestFocus()
+                            } else {
                                 showErrorDialog = true
                             }
 
 
-                        }
-
-                     else   if(currentRow == 5 && harfSayisi>=6)
-                        {
+                        } else if (currentRow == 5 && harfSayisi >= 6) {
                             enteredWord6 = letters.joinToString(separator = "")
                             enteredWord6 = enteredWord6.takeLast(harfSayisi)
                             println(enteredWord6)
 
 
-                            var sonuc =  KelimeVarmi(
+                            var sonuc = KelimeVarmi(
                                 kelime = enteredWord6,
                                 dortHarfliKelimeler = dortHarfliKelimeler,
                                 besHarfliKelimeler = besHarfliKelimeler,
@@ -1078,77 +1626,66 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
                                 harfSayisi = harfSayisi
                             )
 
-                            if(sonuc){
+                            if (sonuc) {
 
 
                                 for (i in 0 until harfSayisi) {
 
-                                    if(enteredWord6[i] == bulunacakKelime[i])
-                                    {
-                                        textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                    }
-
-                                    else{
-                                        for (j in 0 until harfSayisi)
-                                        {
-                                            if(enteredWord6[i] == bulunacakKelime[j] && i!=j)
-                                            {
-                                                textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#F2F90C"))
+                                    if (enteredWord6[i] == bulunacakKelime[i]) {
+                                        textColorList[i + harfSayisi * currentRow] =
+                                            Color(android.graphics.Color.parseColor("#0AA351"))
+                                    } else {
+                                        for (j in 0 until harfSayisi) {
+                                            if (enteredWord6[i] == bulunacakKelime[j] && i != j) {
+                                                textColorList[i + harfSayisi * currentRow] =
+                                                    Color(android.graphics.Color.parseColor("#F2F90C"))
                                             }
 
                                         }
                                     }
 
 
-
                                 }
 
 
 
-                                if(bulunacakKelime.equals(enteredWord6))
-                                {showErrorDialog2 = true}
+                                if (bulunacakKelime.equals(enteredWord6)) {
+                                    showErrorDialog2 = true
+                                }
                                 currentRow++
-                                if(harfSayisi>currentRow)
-                                focusRequesters[currentRow * gridSize].requestFocus()
-                            }
-
-                            else{
+                                if (harfSayisi > currentRow)
+                                    focusRequesters[currentRow * gridSize].requestFocus()
+                            } else {
                                 showErrorDialog = true
                             }
 
 
-                        }
-
-                     else if(currentRow == 6 && harfSayisi>=7)
-                        {
+                        } else if (currentRow == 6 && harfSayisi >= 7) {
                             enteredWord7 = letters.joinToString(separator = "")
                             enteredWord7 = enteredWord7.takeLast(harfSayisi)
                             println(enteredWord7)
 
-                         var sonuc =  KelimeVarmi(
+                            var sonuc = KelimeVarmi(
                                 kelime = enteredWord7,
                                 dortHarfliKelimeler = dortHarfliKelimeler,
                                 besHarfliKelimeler = besHarfliKelimeler,
                                 altiHarfliKelimeler = altiHarfliKelimeler,
                                 yediHarfliKelimeler = yediHarfliKelimeler,
-                             harfSayisi = harfSayisi
+                                harfSayisi = harfSayisi
                             )
 
-                            if(sonuc){
+                            if (sonuc) {
 
                                 for (i in 0 until harfSayisi) {
 
-                                    if(enteredWord7[i] == bulunacakKelime[i])
-                                    {
-                                        textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#0AA351"))
-                                    }
-
-                                    else{
-                                        for (j in 0 until harfSayisi)
-                                        {
-                                            if(enteredWord7[i] == bulunacakKelime[j] && i!=j)
-                                            {
-                                                textColorList[i+harfSayisi*currentRow] = Color(android.graphics.Color.parseColor("#F2F90C"))
+                                    if (enteredWord7[i] == bulunacakKelime[i]) {
+                                        textColorList[i + harfSayisi * currentRow] =
+                                            Color(android.graphics.Color.parseColor("#0AA351"))
+                                    } else {
+                                        for (j in 0 until harfSayisi) {
+                                            if (enteredWord7[i] == bulunacakKelime[j] && i != j) {
+                                                textColorList[i + harfSayisi * currentRow] =
+                                                    Color(android.graphics.Color.parseColor("#F2F90C"))
                                             }
 
                                         }
@@ -1156,21 +1693,18 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
 
                                 }
 
-                                if(bulunacakKelime.equals(enteredWord7))
-                                {showErrorDialog2 = true}
+                                if (bulunacakKelime.equals(enteredWord7)) {
+                                    showErrorDialog2 = true
+                                }
                                 currentRow++
-                                if(harfSayisi>currentRow)
-                                focusRequesters[currentRow * gridSize].requestFocus()
-                            }
-
-                            else{
+                                if (harfSayisi > currentRow)
+                                    focusRequesters[currentRow * gridSize].requestFocus()
+                            } else {
                                 showErrorDialog = true
                             }
 
 
-
                         }
-
 
 
                     } else {
@@ -1180,18 +1714,18 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
             },
 
             enabled = if (harfSayisi > currentRow) {
-                letters.slice(currentRow * gridSize until (currentRow + 1) * gridSize).all { it.isNotEmpty() }
+                letters.slice(currentRow * gridSize until (currentRow + 1) * gridSize)
+                    .all { it.isNotEmpty() }
             } else {
                 // Eğer harfSayisi, currentRow'dan küçük veya eşitse, enabled değerini false olarak ayarla
                 false
-            }    ,
+            },
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth()
         ) {
             Text("Next Row")
         }
-
 
 
     }
@@ -1202,29 +1736,28 @@ fun LetterGrid(harfSayisi: Int, kutuBoyutu: Int,kutuMesafesi : Int, YaziBoyutu: 
     }
 }
 
-fun KelimeVarmi(kelime: String,dortHarfliKelimeler: List<String>,besHarfliKelimeler: List<String>,altiHarfliKelimeler: List<String>,yediHarfliKelimeler: List<String>,harfSayisi: Int): Boolean {
+fun KelimeVarmi(
+    kelime: String,
+    dortHarfliKelimeler: List<String>,
+    besHarfliKelimeler: List<String>,
+    altiHarfliKelimeler: List<String>,
+    yediHarfliKelimeler: List<String>,
+    harfSayisi: Int
+): Boolean {
     var isFindWord = false
 
 
-    if (  harfSayisi == 4 && dortHarfliKelimeler.map{it.uppercase()}.contains(kelime))
-    {
+    if (harfSayisi == 4 && dortHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
         isFindWord = true
 
 
-    }
-    else if (harfSayisi == 5 && besHarfliKelimeler.map{it.uppercase()}.contains(kelime) )
-    {
+    } else if (harfSayisi == 5 && besHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
         isFindWord = true
 
-    }
-
-    else if (harfSayisi == 6 && altiHarfliKelimeler.map{it.uppercase()}.contains(kelime) )
-    {
+    } else if (harfSayisi == 6 && altiHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
         isFindWord = true
 
-    }
-    else if (harfSayisi == 7 && yediHarfliKelimeler.map{it.uppercase()}.contains(kelime))
-    {
+    } else if (harfSayisi == 7 && yediHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
 
         isFindWord = true
     }
@@ -1235,7 +1768,156 @@ fun KelimeVarmi(kelime: String,dortHarfliKelimeler: List<String>,besHarfliKelime
 
 }
 
+fun updateGamerWordInRoom(gameType: Boolean, roomType: String, userId: String, word: String) {
+    val db = FirebaseFirestore.getInstance()
+    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer/$userId"
 
+    val updateMap = hashMapOf(
+        "word" to word,
+        "ready" to true
+    )
+
+    db.document(gamerPath).set(updateMap, SetOptions.merge())
+        .addOnSuccessListener {
+            Log.d("updateGamerInfoInRoom", "Gamer info and word updated successfully.")
+
+        }
+        .addOnFailureListener { exception ->
+            Log.e("updateGamerInfoInRoom", "Failed to update gamer info and word", exception)
+
+        }
+}
+
+fun updateGamerWinnerInRoom(
+    gameType: Boolean,
+    roomType: String,
+    userId: String,
+    status: String,
+    status1: String,
+    onComplete: () -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer"
+
+    db.collection(gamerPath).get().addOnSuccessListener { snapshot ->
+        for (document in snapshot.documents) {
+            val gamerId = document.id
+
+            // Şu anki kullanıcı değilse, yani diğer oyuncuysa
+            if (gamerId != userId) {
+                // Diğer oyuncunun durumunu kaybeden olarak güncelle
+                val otherGamerPath = "$gamerPath/$gamerId"
+                db.document(otherGamerPath).set(hashMapOf("status" to status1), SetOptions.merge())
+            }
+        }
+
+        // Şu anki kullanıcının (kazananın) durumunu güncelle
+        val winnerGamerPath = "$gamerPath/$userId"
+        db.document(winnerGamerPath).set(hashMapOf("status" to status), SetOptions.merge())
+            .addOnSuccessListener {
+                Log.d("updateGamerWinnerInRoom", "Winner updated successfully.")
+                onComplete()
+            }
+            .addOnFailureListener { exception ->
+                Log.e("updateGamerWinnerInRoom", "Failed to update winner", exception)
+                onComplete()
+            }
+    }.addOnFailureListener { exception ->
+        Log.e("updateGamerWinnerInRoom", "Failed to retrieve gamers", exception)
+        onComplete()
+    }
+}
+
+fun listenForOtherGamerWord(
+    gameType: Boolean,
+    roomType: String,
+    myUserId: String,
+    onWordReceived: (String) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer")
+
+    gamersRef.addSnapshotListener { snapshot, e ->
+        if (e != null) {
+            Log.e("ListenForOtherGamerWord", "Listening failed.", e)
+            return@addSnapshotListener
+        }
+
+        snapshot?.documents?.forEach { document ->
+            val userId = document.id
+            if (userId != myUserId) { // Kendi userId'imi hariç tut
+                val word = document.getString("word") ?: ""
+                if (word.isNotEmpty()) {
+                    onWordReceived(word)
+                }
+            }
+        }
+    }
+}
+
+fun listenForGameStart(gameType: Boolean, roomType: String, onGameStart: () -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer")
+
+    gamersRef.addSnapshotListener { snapshots, e ->
+        if (e != null) {
+            Log.e("ListenForGameStart", "Listening failed.", e)
+            return@addSnapshotListener
+        }
+
+        var readyCount = 0
+        snapshots?.documents?.forEach { document ->
+            val isReady = document.getBoolean("ready") ?: false
+            if (isReady) readyCount++
+        }
+
+        if (readyCount == 2) { // Varsayılan olarak 2 oyuncu hazır olduğunda oyun başlar
+            Log.d("GameStart", "Both players are ready. Starting the game...")
+            onGameStart()
+        }
+    }
+}
+
+data class PlayerReadyStatus(val userId: String, val isReady: Boolean)
+
+fun listenForGameReadyStatus(
+    gameType: Boolean,
+    roomType: String,
+    onGameReadyStatusChanged: (List<PlayerReadyStatus>) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer")
+
+    gamersRef.addSnapshotListener { snapshots, e ->
+        if (e != null) {
+            Log.e("ListenForGameReadyStatus", "Listening failed.", e)
+            return@addSnapshotListener
+        }
+
+        val readyStatusList = mutableListOf<PlayerReadyStatus>()
+        snapshots?.documents?.forEach { document ->
+            val userId = document.id // Örneğin, belgenin ID'si kullanıcı ID'si olabilir
+            val isReady = document.getBoolean("ready") ?: false
+            readyStatusList.add(PlayerReadyStatus(userId, isReady))
+        }
+
+        // Hazır durumdaki kullanıcıları ve durumlarını döndür
+        onGameReadyStatusChanged(readyStatusList)
+    }
+}
+// Oyuncuyu gamer koleksiyonundan silen fonksiyon
+fun deletePlayerFromGamerCollection(gameType: Boolean, roomType: String, userId: String) {
+    val db = FirebaseFirestore.getInstance()
+    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer/$userId"
+
+    db.document(gamerPath).delete()
+        .addOnSuccessListener {
+            Log.d("deletePlayer", "Player successfully deleted from gamer collection.")
+        }
+        .addOnFailureListener { exception ->
+            Log.e("deletePlayer", "Error deleting player from gamer collection", exception)
+        }
+}
 
 @Composable
 fun LetterInput(
@@ -1250,7 +1932,8 @@ fun LetterInput(
     textColorList: List<Color>, // Harf renklerini tutmak için liste
     index: Int // Harf indexi
 ) {
-    val displayLetter = if (isLocked) lockedLetter else letter // Kilitliyse, belirlenen harfi kullan
+    val displayLetter =
+        if (isLocked) lockedLetter else letter // Kilitliyse, belirlenen harfi kullan
 
 
     BasicTextField(

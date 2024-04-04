@@ -44,6 +44,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -221,6 +222,7 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                             it1.uid,
                                             "oyunda"
                                         )
+                                        updateGamerInfoInRoom(selectedGameType, selectedRoom, it1.uid)
                                         navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
                                     }
 
@@ -405,6 +407,7 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                                     Firebase.auth.currentUser!!.uid,
                                                     "oyunda"
                                                 )
+                                                updateGamerInfoInRoom(selectedGameType, selectedRoom, Firebase.auth.currentUser!!.uid)
                                                 navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
                                             }
 
@@ -771,6 +774,19 @@ fun getRandomTurkishLetterAndWordIndex(roomType: String): Pair<String, Int> {
     val wordIndex = Random.nextInt(roomType.toInt()) // Assuming the word index is a random number from 0 to 4
     return Pair(selectedLetter, wordIndex)
 }
+fun updateGamerInfoInRoom(gameType: Boolean, roomType: String, userId: String) {
+    val db = FirebaseFirestore.getInstance()
+    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer/$userId"
+
+    val updateMap = hashMapOf<String, Any>("userId" to userId, "status" to "oyunda")
+
+    db.document(gamerPath).set(updateMap, SetOptions.merge())
+        .addOnSuccessListener {
+        }
+        .addOnFailureListener { exception ->
+        }
+}
+
 
 
 @Preview(showBackground = true)
