@@ -765,7 +765,7 @@ fun findUsernameById(userId: String, db: FirebaseFirestore, onUsernameFound: (St
     }
 }
 fun getRandomTurkishLetterAndWordIndex(roomType: String): Pair<String, Int> {
-    val turkishLetters = arrayOf("a", "b", "c", "ç", "d", "e", "f", "g", "ğ", "h", "ı", "i", "j", "k", "l", "m", "n", "o", "ö", "p", "r", "s", "ş", "t", "u", "ü", "v", "y", "z")
+    val turkishLetters = arrayOf("A", "B", "C", "Ç", "D", "E", "F", "G", "Ğ", "H", "I", "İ", "J", "K", "L", "M", "N", "O", "Ö", "P", "R", "S", "Ş", "T", "U", "Ü", "V", "Y", "Z")
     val randomNumber = Random.nextInt(turkishLetters.size)
     val selectedLetter = turkishLetters[randomNumber]
     val wordIndex = Random.nextInt(roomType.toInt()) // Assuming the word index is a random number from 0 to 4
