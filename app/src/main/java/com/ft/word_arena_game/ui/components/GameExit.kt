@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.ft.word_arena_game.ui.screens.updateGamerWinnerInRoom
 
 @Composable
-fun GameExit(gameType: Boolean, roomType: String, userId: String)
+fun GameExit(gameType: Boolean, roomType: String, userId: String, rivalId: String )
 {
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -49,7 +49,7 @@ fun GameExit(gameType: Boolean, roomType: String, userId: String)
     if (showDialog) {
         ExitConfirmationDialog(
             onConfirm = {
-                updateGamerWinnerInRoom(gameType,roomType,userId, "kaybeden", "kazanan"){
+                updateGamerWinnerInRoom(gameType,roomType,userId,rivalId, "kaybeden", "kazanan"){
                     backCallback.isEnabled = false
                     backCallback.remove()
                     (context as OnBackPressedDispatcherOwner).onBackPressedDispatcher.onBackPressed()

@@ -223,7 +223,9 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                             "oyunda"
                                         )
                                         updateGamerInfoInRoom(selectedGameType, selectedRoom, it1.uid)
-                                        navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
+                                        val rivalId = currentRequest!!.fromUserId
+                                        println("rakip ıdddddddddddddddddd $rivalId")
+                                        navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
                                     }
 
 
@@ -408,7 +410,9 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                                     "oyunda"
                                                 )
                                                 updateGamerInfoInRoom(selectedGameType, selectedRoom, Firebase.auth.currentUser!!.uid)
-                                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
+                                                val rivalId = user.userId
+                                                println("rakip ıdddddddddddddddddd $rivalId")
+                                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
                                             }
 
 
@@ -771,12 +775,13 @@ fun getRandomTurkishLetterAndWordIndex(roomType: String): Pair<String, Int> {
     val turkishLetters = arrayOf("A", "B", "C", "Ç", "D", "E", "F", "G", "Ğ", "H", "I", "İ", "J", "K", "L", "M", "N", "O", "Ö", "P", "R", "S", "Ş", "T", "U", "Ü", "V", "Y", "Z")
     val randomNumber = Random.nextInt(turkishLetters.size)
     val selectedLetter = turkishLetters[randomNumber]
-    val wordIndex = Random.nextInt(roomType.toInt()) // Assuming the word index is a random number from 0 to 4
+    val wordIndex = Random.nextInt(roomType.toInt() -1) +1 // Assuming the word index is a random number from 0 to 4
     return Pair(selectedLetter, wordIndex)
+
 }
 fun updateGamerInfoInRoom(gameType: Boolean, roomType: String, userId: String) {
     val db = FirebaseFirestore.getInstance()
-    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer/$userId"
+    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer$roomType/$userId"
 
     val updateMap = hashMapOf<String, Any>("userId" to userId, "status" to "oyunda")
 

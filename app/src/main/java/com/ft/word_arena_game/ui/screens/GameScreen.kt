@@ -46,11 +46,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -74,13 +72,14 @@ fun GameScreen(
     selectedGameType: Boolean,
     selectedRoom: String,
     randomLetter: String,
-    wordIndex: Int
+    wordIndex: Int,
+    rivalId: String
 ) {
 
     val user = Firebase.auth.currentUser
     val context = LocalContext.current
     val connect = GameConnection(context = context)
-//oyuna aynanda başlama hatalı
+//oyuna aynanda başlama hatalı//ss almaya bakkkk
     val dortHarfliKelimeler = listOf(
         "konu",
         "olay",
@@ -492,7 +491,7 @@ fun GameScreen(
     val harfSabitiVarMi = selectedGameType
     var kutuBoyutu = 70
     var kutuMesafesi = 16
-    var yazıBoyutu = 32
+    var yaziBoyutu = 32
     var showErrorDialog by remember { mutableStateOf(false) }
     if (showErrorDialog) {
         AlertDialog(
@@ -517,13 +516,14 @@ fun GameScreen(
     var showCircularProgress by remember { mutableStateOf(false) } // Oyun ekranını gösterme durumunu tutan değişken
     val textColorList = remember { mutableStateListOf<Color>() } // Harf renkleri için liste
     val coroutineScope = rememberCoroutineScope()
+    var sureDurduMu by remember { mutableStateOf(false) }
     var playerStatus by remember { mutableStateOf("") }
     if (user != null) {
 
         LaunchedEffect(key1 = user.uid) {
             val userId = user.uid
             val db = FirebaseFirestore.getInstance()
-            val playerPath = "game_rooms/$selectedGameType/rooms/$selectedRoom/gamer/$userId"
+            val playerPath = "game_rooms/$selectedGameType/rooms/$selectedRoom/gamer$selectedRoom/$userId"
 
             db.document(playerPath).addSnapshotListener { snapshot, e ->
                 if (e != null) {
@@ -550,7 +550,7 @@ fun GameScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
+                            //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
                             navController.popBackStack() }
                     ) {
                         Text("Tamam")
@@ -568,7 +568,25 @@ fun GameScreen(
                 confirmButton = {
                     Button(
                         onClick = {
-                            deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
+                            //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
+                            navController.popBackStack() }
+                    ) {
+                        Text("Tamam")
+                    }
+                }
+            )
+        }
+
+        "berabere" -> {
+            // Kaybeden için UI
+            AlertDialog(
+                onDismissRequest = { showErrorDialog = false },
+                title = { Text(text = "Berabere!") },
+                text = { Text(text = "Oyun berabere bitti.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
                             navController.popBackStack() }
                     ) {
                         Text("Tamam")
@@ -587,25 +605,17 @@ fun GameScreen(
     if (harfSayisi == 5) {
         kutuBoyutu = 55
         kutuMesafesi = 12
-        yazıBoyutu = 24
+        yaziBoyutu = 24
 
-/*
-         if(harfSabitiVarMi)
-         {
-             randomNumber = Random.nextInt(29)
-             selectedLetter = turkishLetters[randomNumber]
-             kelimeIndex = Random.nextInt(6)
-         }
-         */
 
     } else if (harfSayisi == 6) {
         kutuBoyutu = 45
         kutuMesafesi = 8
-        yazıBoyutu = 16
+        yaziBoyutu = 16
     } else if (harfSayisi == 7) {
         kutuBoyutu = 35
         kutuMesafesi = 4
-        yazıBoyutu = 8
+        yaziBoyutu = 8
     }
     
     var timeLeft by remember { mutableStateOf(60) }
@@ -629,9 +639,14 @@ fun GameScreen(
                 LaunchedEffect(key1 = timeLeft) {
                     if (timeLeft > 0) {
                         delay(1000) // 1 saniye bekleyin
-                        timeLeft-- // Zamanı azalt
+                        if(!sureDurduMu)
+                        {
+                            timeLeft--
+                        }
+                        // Zamanı azalt
                     } else {
                         isTimerRunning = false
+                        println("buraya geldi 1")
 
                     }
                 }
@@ -683,33 +698,57 @@ fun GameScreen(
                         }
                     }
                     if (showSnackbar == "a") {
-                        showCircularProgress = false
-                        val snackbarHostState = remember { SnackbarHostState() }
 
-                        LaunchedEffect(key1 = true) {
-                            snackbarHostState.showSnackbar(
-                                message = "Rakip oyuncu kelime girişi yapmadı. Oyunu kazandınız.",
-                                duration = SnackbarDuration.Short
-                            )
-                            delay(2000) // 2 saniye bekleyin
-                            navController.popBackStack() // Oda ekranına geri dön
+                        if (user != null) {
+                            updateGamerWinnerInRoom(
+                                selectedGameType,
+                                selectedRoom,
+                                user.uid,
+                                rivalId,
+                                "kazanan",
+                                "kaybeden"
+                            ) {
+                                showCircularProgress = false
+
+                            }
+                            val snackbarHostState = remember { SnackbarHostState() }
+                            LaunchedEffect(key1 = true) {
+                                snackbarHostState.showSnackbar(
+                                    message = "Rakip oyuncu kelime girişi yapmadı. Oyunu kazandınız.",
+                                    duration = SnackbarDuration.Short
+                                )
+                                delay(2000) // 2 saniye bekleyin
+                                navController.popBackStack() // Oda ekranına geri dön
+                            }
+                            SnackbarHost(hostState = snackbarHostState)
                         }
 
-                        SnackbarHost(hostState = snackbarHostState)
+
                     } else if (showSnackbar == "b") {
-                        showCircularProgress = false
-                        val snackbarHostState = remember { SnackbarHostState() }
+                        if (user != null) {
+                            updateGamerWinnerInRoom(
+                                selectedGameType,
+                                selectedRoom,
+                                user.uid,
+                                rivalId,
+                                "kaybeden",
+                                "kazanan"
+                            ) {
+                                showCircularProgress = false
 
-                        LaunchedEffect(key1 = true) {
-                            snackbarHostState.showSnackbar(
-                                message = "Kelime girişi yapmadınız. Oyunu kaybettiniz.",
-                                duration = SnackbarDuration.Short
-                            )
-                            delay(2000) // 2 saniye bekleyin
-                            navController.popBackStack() // Oda ekranına geri dön
+                            }
+                            val snackbarHostState = remember { SnackbarHostState() }
+                            LaunchedEffect(key1 = true) {
+                                snackbarHostState.showSnackbar(
+                                    message = "Kelime girişi yapmadınız. Oyunu kaybettiniz.",
+                                    duration = SnackbarDuration.Short
+                                )
+                                delay(2000) // 2 saniye bekleyin
+                                navController.popBackStack() // Oda ekranına geri dön
+                            }
+
+                            SnackbarHost(hostState = snackbarHostState)
                         }
-
-                        SnackbarHost(hostState = snackbarHostState)
                     } else if (showSnackbar == "c") {
                         showCircularProgress = false
                         val snackbarHostState = remember { SnackbarHostState() }
@@ -721,8 +760,7 @@ fun GameScreen(
                             )
                             delay(2000) // 2 saniye bekleyin
                             //navController.popBackStack() // Oda ekranına geri dön
-                            navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex")
-
+                            navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
                         }
 
                         SnackbarHost(hostState = snackbarHostState)
@@ -748,7 +786,9 @@ fun GameScreen(
                                 }
                                 // Focus değişikliklerini yönet
                                if (value.length == 1 && index == wordIndex-1 &&  harfSabitiVarMi) { // Eğer kullanıcı 2. indexe (üçüncü kutuya) değer girerse
-                                    focusRequesters[wordIndex+1].requestFocus() // Doğrudan 4. indexe (beşinci kutuya) odaklan
+                                   if(wordIndex+1 < harfSayisi){
+                                       focusRequesters[wordIndex+1].requestFocus() // Doğrudan 4. indexe (beşinci kutuya) odaklan
+                                   }
                                     letters = letters.toMutableList().also {
                                         it[index + 1] = randomLetter.singleOrNull()?.toString() ?: ""
                                     }
@@ -761,8 +801,7 @@ fun GameScreen(
                             },
                             focusRequester = focusRequesters[index],
                             kutuBoyutu = kutuBoyutu,
-                            kutuMesafesi = kutuMesafesi,
-                            yaziBoyutu = yazıBoyutu,
+                            yaziBoyutu = yaziBoyutu,
                             isLocked = isCurrentIndexLocked,
                             lockedLetter = if (isCurrentIndexLocked) randomLetter else "",
                             textColorList = textColorList,
@@ -809,15 +848,19 @@ fun GameScreen(
 
                             } else {
                                 if (user != null) {
-                                    updateGamerWordInRoom(
+                                    updateGameInfoInRoom(
                                         selectedGameType,
                                         selectedRoom,
                                         user.uid,
-                                        enteredWord
+                                        hashMapOf(
+                                            "word" to enteredWord,
+                                            "ready" to true,
+                                            "hasGuessingRight" to true
+                                        )
                                     )
                                     showCircularProgress = true
                                 }
-                                listenForGameStart(selectedGameType, selectedRoom) {
+                                listenForGameStart(selectedGameType, selectedRoom, rivalId) {
                                     showGameScreen = false
                                     showCircularProgress = false
 
@@ -830,15 +873,19 @@ fun GameScreen(
 
                             } else {
                                 if (user != null) {
-                                    updateGamerWordInRoom(
+                                    updateGameInfoInRoom(
                                         selectedGameType,
                                         selectedRoom,
                                         user.uid,
-                                        enteredWord
+                                        hashMapOf(
+                                            "word" to enteredWord,
+                                            "ready" to true,
+                                            "hasGuessingRight" to true
+                                        )
                                     )
                                     showCircularProgress = true
                                 }
-                                listenForGameStart(selectedGameType, selectedRoom) {
+                                listenForGameStart(selectedGameType, selectedRoom, rivalId) {
                                     showGameScreen = false
                                     showCircularProgress = false
 
@@ -851,15 +898,19 @@ fun GameScreen(
 
                             } else {
                                 if (user != null) {
-                                    updateGamerWordInRoom(
+                                    updateGameInfoInRoom(
                                         selectedGameType,
                                         selectedRoom,
                                         user.uid,
-                                        enteredWord
+                                        hashMapOf(
+                                            "word" to enteredWord,
+                                            "ready" to true,
+                                            "hasGuessingRight" to true
+                                        )
                                     )
                                     showCircularProgress = true
                                 }
-                                listenForGameStart(selectedGameType, selectedRoom) {
+                                listenForGameStart(selectedGameType, selectedRoom, rivalId) {
                                     showGameScreen = false
                                     showCircularProgress = false
                                 }
@@ -873,15 +924,19 @@ fun GameScreen(
 
                             } else {
                                 if (user != null) {
-                                    updateGamerWordInRoom(
+                                    updateGameInfoInRoom(
                                         selectedGameType,
                                         selectedRoom,
                                         user.uid,
-                                        enteredWord
+                                        hashMapOf(
+                                            "word" to enteredWord,
+                                            "ready" to true,
+                                            "hasGuessingRight" to true
+                                        )
                                     )
                                     showCircularProgress = true
                                 }
-                                listenForGameStart(selectedGameType, selectedRoom) {
+                                listenForGameStart(selectedGameType, selectedRoom, rivalId) {
                                     showGameScreen = false
                                     showCircularProgress = false
 
@@ -909,7 +964,7 @@ fun GameScreen(
                     listenForOtherGamerWord(
                         selectedGameType,
                         selectedRoom,
-                        user.uid
+                        rivalId
                     ) { otherGamerWord ->
                         bulunacakKelime = otherGamerWord
                         Log.d("kelimeeeeee", bulunacakKelime)
@@ -918,7 +973,7 @@ fun GameScreen(
                         harfSayisi,
                         kutuBoyutu,
                         kutuMesafesi,
-                        yazıBoyutu,
+                        yaziBoyutu,
                         dortHarfliKelimeler,
                         besHarfliKelimeler,
                         altiHarfliKelimeler,
@@ -927,6 +982,7 @@ fun GameScreen(
                         selectedGameType,
                         selectedRoom,
                         user.uid,
+                        rivalId,
                         navController
                     )
                 }
@@ -935,7 +991,7 @@ fun GameScreen(
         }
 
         if (user != null) {
-            GameExit(selectedGameType, selectedRoom, user.uid)
+            GameExit(selectedGameType, selectedRoom, user.uid, rivalId)
         }
     } else {
         var isTimerRunning by remember { mutableStateOf(true) } // Timer'ın çalışıp çalışmadığını kontrol eden fla
@@ -1004,6 +1060,7 @@ fun GameScreen(
                                         selectedGameType,
                                         selectedRoom,
                                         user.uid,
+                                        rivalId,
                                         "kaybeden",
                                         "kazanan"
                                     ) {
@@ -1042,15 +1099,25 @@ fun LetterGrid(
     selectedGameType: Boolean,
     selectedRoom: String,
     userId: String,
+    rivalId: String,
     navController: NavController
 ) {
 
 
     var puan = 0
 
-    var rakipOyunucKelimeyiBulamadiMi by remember { mutableStateOf(true) }
+    var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }//burayı true ya çek
     var zamanindaTahminYapılmadiMi by remember { mutableStateOf(false) }
-    var kullanicilarKelimeyiBulamadi by remember { mutableStateOf(true) }
+    var rivalScore by remember { mutableStateOf(0) } //
+
+    listenForOtherGamerGuessingRightLoss(
+        selectedGameType,
+        selectedRoom,
+        userId
+    ) {
+        rakipOyuncuKelimeyiBulamadiMi = true
+    }
+
     var showErrorDialog by remember { mutableStateOf(false) }
     if (showErrorDialog) {
         AlertDialog(
@@ -1081,6 +1148,7 @@ fun LetterGrid(
                             selectedGameType,
                             selectedRoom,
                             userId,
+                            rivalId,
                             "kazanan",
                             "kaybeden"
                         ) {navController.popBackStack()
@@ -1109,6 +1177,7 @@ fun LetterGrid(
                             selectedGameType,
                             selectedRoom,
                             userId,
+                            rivalId,
                             "kaybeden",
                             "kazanan"
                         ) {navController.popBackStack()
@@ -1137,7 +1206,7 @@ fun LetterGrid(
         }
     }
 
-    if (rakipOyunucKelimeyiBulamadiMi) {
+    if (rakipOyuncuKelimeyiBulamadiMi) {
         timeLeft = 0
         isTimerRunning = false
     }
@@ -1194,7 +1263,7 @@ fun LetterGrid(
 
 
         } else {
-            if (rakipOyunucKelimeyiBulamadiMi) {
+            if (rakipOyuncuKelimeyiBulamadiMi) {
                 isTimerRunning = false
 
                 zamanindaTahminYapılmadiMi = true
@@ -1354,7 +1423,6 @@ fun LetterGrid(
                         focusRequester = focusRequesters[j],
                         kutuBoyutu,
                         kutuMesafesi,
-                        YaziBoyutu,
                         textColorList = textColorList,
                         index = j
                     )
@@ -1371,7 +1439,7 @@ fun LetterGrid(
         Button(
             onClick = {
                 timeLeft1 = 10
-                if (rakipOyunucKelimeyiBulamadiMi) {
+                if (rakipOyuncuKelimeyiBulamadiMi) {
                     timeLeft = 0
                     isTimerRunning = false
                 } else {
@@ -1567,14 +1635,65 @@ fun LetterGrid(
                                 if (bulunacakKelime.equals(enteredWord4)) {
                                     showErrorDialog2 = true
                                     // bu kısımlarda kelimeyi bulan kullanıcı varsa veritabanından güncelle
-                                } else if (currentRow + 1 == harfSayisi && kullanicilarKelimeyiBulamadi) {
-                                    puan += timeLeft
-                                    println(puan)
-
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
+//false tahmin hakkı bitti
+                                    puan += timeLeft
+                                    println("puannnn : $puan ")
+                                    updateGameInfoInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        userId,
+                                        hashMapOf(
+                                            "hasGuessingRight" to false,
+                                            "puan" to puan
+                                        )
+                                    )
+                                }
+                                if (currentRow + 1 == harfSayisi && rakipOyuncuKelimeyiBulamadiMi) {
 
+                                    getRivalScoreOnce(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        rivalId
+                                    ) { score ->
+                                        rivalScore = score
+                                        println("rakip puannnn : $rivalScore ")
+
+                                        when {
+                                            puan > rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kazanan",
+                                                "kaybeden"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            puan < rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kaybeden",
+                                                "kazanan"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            else -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "berabere",
+                                                "berabere"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                        }
+                                    }
                                 }
 
                                 currentRow++
@@ -1632,14 +1751,65 @@ fun LetterGrid(
                                 if (bulunacakKelime.equals(enteredWord5)) {
                                     showErrorDialog2 = true
                                     println(enteredWord5)
-                                } else if (currentRow + 1 == harfSayisi && kullanicilarKelimeyiBulamadi) {
-                                    puan += timeLeft
-                                    println(puan)
-
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
+//false tahmin hakkı bitti
+                                    puan += timeLeft
+                                    println("puannnn : $puan ")
+                                    updateGameInfoInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        userId,
+                                        hashMapOf(
+                                            "hasGuessingRight" to false,
+                                            "puan" to puan
+                                        )
+                                    )
+                                }
+                                if (currentRow + 1 == harfSayisi && rakipOyuncuKelimeyiBulamadiMi) {
 
+                                    getRivalScoreOnce(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        rivalId
+                                    ) { score ->
+                                        rivalScore = score
+                                        println("rakip puannnn : $rivalScore ")
+
+                                        when {
+                                            puan > rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kazanan",
+                                                "kaybeden"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            puan < rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kaybeden",
+                                                "kazanan"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            else -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "berabere",
+                                                "berabere"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                        }
+                                    }
                                 }
 
                                 currentRow++
@@ -1693,14 +1863,65 @@ fun LetterGrid(
 
                                 if (bulunacakKelime.equals(enteredWord6)) {
                                     showErrorDialog2 = true
-                                } else if (currentRow + 1 == harfSayisi && kullanicilarKelimeyiBulamadi) {
-                                    puan += timeLeft
-                                    println(puan)
-
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
+//false tahmin hakkı bitti
+                                    puan += timeLeft
+                                    println("puannnn : $puan ")
+                                    updateGameInfoInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        userId,
+                                        hashMapOf(
+                                            "hasGuessingRight" to false,
+                                            "puan" to puan
+                                        )
+                                    )
+                                }
+                                if (currentRow + 1 == harfSayisi && rakipOyuncuKelimeyiBulamadiMi) {
 
+                                    getRivalScoreOnce(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        rivalId
+                                    ) { score ->
+                                        rivalScore = score
+                                        println("rakip puannnn : $rivalScore ")
+
+                                        when {
+                                            puan > rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kazanan",
+                                                "kaybeden"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            puan < rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kaybeden",
+                                                "kazanan"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            else -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "berabere",
+                                                "berabere"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                        }
+                                    }
                                 }
 
                                 currentRow++
@@ -1748,13 +1969,65 @@ fun LetterGrid(
 
                                 if (bulunacakKelime.equals(enteredWord7)) {
                                     showErrorDialog2 = true
-                                } else if (currentRow + 1 == harfSayisi && kullanicilarKelimeyiBulamadi) {
-                                    puan += timeLeft
-                                    println(puan)
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
+//false tahmin hakkı bitti
+                                    puan += timeLeft
+                                    println("puannnn : $puan ")
+                                    updateGameInfoInRoom(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        userId,
+                                        hashMapOf(
+                                            "hasGuessingRight" to false,
+                                            "puan" to puan
+                                        )
+                                    )
+                                }
+                                if (currentRow + 1 == harfSayisi && rakipOyuncuKelimeyiBulamadiMi) {
 
+                                    getRivalScoreOnce(
+                                        selectedGameType,
+                                        selectedRoom,
+                                        rivalId
+                                    ) { score ->
+                                        rivalScore = score
+                                        println("rakip puannnn : $rivalScore ")
+
+                                        when {
+                                            puan > rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kazanan",
+                                                "kaybeden"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            puan < rivalScore -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "kaybeden",
+                                                "kazanan"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                            else -> updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "berabere",
+                                                "berabere"
+                                            ) {
+                                                navController.popBackStack()
+                                            }
+                                        }
+                                    }
                                 }
 
                                 currentRow++
@@ -1828,53 +2101,47 @@ fun KelimeVarmi(
     return isFindWord
 
 }
-
-fun updateGamerWordInRoom(gameType: Boolean, roomType: String, userId: String, word: String) {
+fun updateGameInfoInRoom(gameType: Boolean, roomType: String, userId: String, updateData: Map<String, Any>) {
     val db = FirebaseFirestore.getInstance()
-    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer/$userId"
+    val gameInfoPath = "game_rooms/$gameType/rooms/$roomType/gamer$roomType/$userId"
 
-    val updateMap = hashMapOf(
-        "word" to word,
-        "ready" to true
-    )
-
-    db.document(gamerPath).set(updateMap, SetOptions.merge())
+    db.document(gameInfoPath).set(updateData, SetOptions.merge())
         .addOnSuccessListener {
-            Log.d("updateGamerInfoInRoom", "Gamer info and word updated successfully.")
-
+            Log.d("UpdateGameInfoInRoom", "Game info updated successfully for user $userId.")
         }
         .addOnFailureListener { exception ->
-            Log.e("updateGamerInfoInRoom", "Failed to update gamer info and word", exception)
-
+            Log.e("UpdateGameInfoInRoom", "Failed to update game info for user $userId", exception)
         }
 }
+
 
 fun updateGamerWinnerInRoom(
     gameType: Boolean,
     roomType: String,
     userId: String,
+    rivalId: String,
     status: String,
     status1: String,
     onComplete: () -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
-    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer"
+    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer$roomType"
 
     db.collection(gamerPath).get().addOnSuccessListener { snapshot ->
-        for (document in snapshot.documents) {
-            val gamerId = document.id
-
-            // Şu anki kullanıcı değilse, yani diğer oyuncuysa
-            if (gamerId != userId) {
-                // Diğer oyuncunun durumunu kaybeden olarak güncelle
-                val otherGamerPath = "$gamerPath/$gamerId"
-                db.document(otherGamerPath).set(hashMapOf("status" to status1), SetOptions.merge())
+        val loserGamerPath = "$gamerPath/$rivalId"
+        db.document(loserGamerPath).set(hashMapOf("ready" to false, "status" to status1 ), SetOptions.merge())
+            .addOnSuccessListener {
+                Log.d("updateGamerWinnerInRoom", "Winner updated successfully.")
+                onComplete()
             }
-        }
+            .addOnFailureListener { exception ->
+                Log.e("updateGamerWinnerInRoom", "Failed to update winner", exception)
+                onComplete()
+            }
 
         // Şu anki kullanıcının (kazananın) durumunu güncelle
         val winnerGamerPath = "$gamerPath/$userId"
-        db.document(winnerGamerPath).set(hashMapOf("status" to status), SetOptions.merge())
+        db.document(winnerGamerPath).set(hashMapOf("ready" to false, "status" to status ), SetOptions.merge())
             .addOnSuccessListener {
                 Log.d("updateGamerWinnerInRoom", "Winner updated successfully.")
                 onComplete()
@@ -1892,48 +2159,68 @@ fun updateGamerWinnerInRoom(
 fun listenForOtherGamerWord(
     gameType: Boolean,
     roomType: String,
-    myUserId: String,
+    rivalId: String,
     onWordReceived: (String) -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
-    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer")
+    val rivalRef = db.document("game_rooms/$gameType/rooms/$roomType/gamer$roomType/$rivalId")
+
+    rivalRef.addSnapshotListener { documentSnapshot, e ->
+        if (e != null) {
+            Log.e("ListenForRivalWord", "Listening failed.", e)
+            return@addSnapshotListener
+        }
+
+        // Dokümandan kelimeyi alıp callback fonksiyonunu çağır
+        val word = documentSnapshot?.getString("word") ?: ""
+        if (word.isNotEmpty()) {
+            onWordReceived(word)
+        }
+    }
+}
+
+fun listenForOtherGamerGuessingRightLoss(
+    gameType: Boolean,
+    roomType: String,
+    myUserId: String,
+    onGuessingRightLost: () -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer$roomType")
 
     gamersRef.addSnapshotListener { snapshot, e ->
         if (e != null) {
-            Log.e("ListenForOtherGamerWord", "Listening failed.", e)
+            Log.e("ListenForOtherGamerGuessingRightLoss", "Listening failed.", e)
             return@addSnapshotListener
         }
 
         snapshot?.documents?.forEach { document ->
             val userId = document.id
-            if (userId != myUserId) { // Kendi userId'imi hariç tut
-                val word = document.getString("word") ?: ""
-                if (word.isNotEmpty()) {
-                    onWordReceived(word)
+            // Kendi userId'imi hariç tut ve hasGuessingRight özelliğine bak
+            if (userId != myUserId) {
+                val hasGuessingRight = document.getBoolean("hasGuessingRight") ?: true
+                if (!hasGuessingRight) { // Eğer hasGuessingRight false ise
+                    onGuessingRightLost() // Karşı tarafın tahmin hakkını kaybettiği callback fonksiyonunu çağır
                 }
             }
         }
     }
 }
 
-fun listenForGameStart(gameType: Boolean, roomType: String, onGameStart: () -> Unit) {
+fun listenForGameStart(gameType: Boolean, roomType: String, rivalId: String, onGameStart: () -> Unit) {
     val db = FirebaseFirestore.getInstance()
-    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer")
+    val rivalRef = db.document("game_rooms/$gameType/rooms/$roomType/gamer$roomType/$rivalId")
 
-    gamersRef.addSnapshotListener { snapshots, e ->
+    rivalRef.addSnapshotListener { documentSnapshot, e ->
         if (e != null) {
             Log.e("ListenForGameStart", "Listening failed.", e)
             return@addSnapshotListener
         }
 
-        var readyCount = 0
-        snapshots?.documents?.forEach { document ->
-            val isReady = document.getBoolean("ready") ?: false
-            if (isReady) readyCount++
-        }
-
-        if (readyCount == 2) { // Varsayılan olarak 2 oyuncu hazır olduğunda oyun başlar
-            Log.d("GameStart", "Both players are ready. Starting the game...")
+        // Doküman üzerinden direkt olarak 'ready' değerini kontrol edin
+        val rivalReady = documentSnapshot?.getBoolean("ready") ?: false
+        if (rivalReady) {
+            Log.d("GameStart", "Rival is ready. Checking if the game can start...")
             onGameStart()
         }
     }
@@ -1947,7 +2234,7 @@ fun listenForGameReadyStatus(
     onGameReadyStatusChanged: (List<PlayerReadyStatus>) -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
-    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer")
+    val gamersRef = db.collection("game_rooms/$gameType/rooms/$roomType/gamer$roomType")
 
     gamersRef.addSnapshotListener { snapshots, e ->
         if (e != null) {
@@ -1969,7 +2256,7 @@ fun listenForGameReadyStatus(
 // Oyuncuyu gamer koleksiyonundan silen fonksiyon
 fun deletePlayerFromGamerCollection(gameType: Boolean, roomType: String, userId: String) {
     val db = FirebaseFirestore.getInstance()
-    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer/$userId"
+    val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer$roomType/$userId"
 
     db.document(gamerPath).delete()
         .addOnSuccessListener {
@@ -1980,13 +2267,36 @@ fun deletePlayerFromGamerCollection(gameType: Boolean, roomType: String, userId:
         }
 }
 
+fun getRivalScoreOnce(
+    gameType: Boolean,
+    roomType: String,
+    rivalId: String,
+    onScoreReceived: (Int) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    // Belirtilen rakibin puanının saklandığı dokümanın yolu
+    val rivalRef = db.document("game_rooms/$gameType/rooms/$roomType/gamer$roomType/$rivalId")
+
+    rivalRef.get().addOnSuccessListener { documentSnapshot ->
+        if (documentSnapshot.exists()) {
+            // Dokümandan puanı al ve callback fonksiyonunu çağır
+            val score = documentSnapshot.getLong("puan")?.toInt() ?: 0
+            onScoreReceived(score)
+        } else {
+            Log.d("GetRivalScoreOnce", "No such document")
+        }
+    }.addOnFailureListener { e ->
+        Log.e("GetRivalScoreOnce", "Error getting document: ", e)
+    }
+}
+
+
 @Composable
 fun LetterInput(
     letter: String,
     onValueChange: (String) -> Unit = {},
     focusRequester: FocusRequester = FocusRequester(),
     kutuBoyutu: Int = 48, // Varsayılan kutu boyutu
-    kutuMesafesi: Int,
     yaziBoyutu: Int,
     isLocked: Boolean = false, // Kilit durumunu kontrol eden yeni parametre
     lockedLetter: String = "", // Kilitliyken gösterilecek harf

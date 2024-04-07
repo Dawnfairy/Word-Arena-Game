@@ -26,7 +26,7 @@ object Destinations {
     const val RoomTypeSelectionRoute = "roomTypeSelection"
     const val RoomSelectionRoute = "roomSelection/{roomType}"
     const val RoomRoute = "room/{roomType}/{roomNumber}"
-    const val GameRoute = "game/{roomType}/{roomNumber}/{randomLetter}/{wordIndex}"
+    const val GameRoute = "game/{roomType}/{roomNumber}/{randomLetter}/{wordIndex}/{rivalId}"
 }
 
 @Composable
@@ -65,13 +65,15 @@ fun NavGraph(startDestination: String = "login") {
                 navArgument("roomType") { type = NavType.BoolType },
                 navArgument("roomNumber") { type = NavType.StringType },
                 navArgument("randomLetter") { type = NavType.StringType },
-                navArgument("wordIndex") { type = NavType.IntType }
+                navArgument("wordIndex") { type = NavType.IntType },
+                navArgument("rivalId") { type = NavType.StringType },
             )) { backStackEntry ->
             val roomType = backStackEntry.arguments?.getBoolean("roomType") ?: false
             val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: ""
             val randomLetter = backStackEntry.arguments?.getString("randomLetter") ?: ""
             val wordIndex = backStackEntry.arguments?.getInt("wordIndex") ?: -1
-            GameScreen(navController, roomType, roomNumber, randomLetter, wordIndex)
+            val rivalId = backStackEntry.arguments?.getString("rivalId") ?: ""
+            GameScreen(navController, roomType, roomNumber, randomLetter, wordIndex, rivalId)
         }
     }
 }
