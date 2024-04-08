@@ -1106,10 +1106,11 @@ fun LetterGrid(
 
 
     var puan = 0
+
     var yesilPuan = 0
     var sariPuan = 0
     var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }//burayı true ya çek
-    var zamanindaTahminYapılmadiMi by remember { mutableStateOf(false) }
+    var zamanindaTahminYapilmadiMi by remember { mutableStateOf(false) }
     var rivalScore by remember { mutableStateOf(0) } //
 
     listenForOtherGamerGuessingRightLoss(
@@ -1268,7 +1269,7 @@ fun LetterGrid(
             if (rakipOyuncuKelimeyiBulamadiMi) {
                 isTimerRunning = false
 
-                zamanindaTahminYapılmadiMi = true
+                zamanindaTahminYapilmadiMi = true
 
             } else {
                 showErrorDialog3 = true
@@ -1308,7 +1309,7 @@ fun LetterGrid(
         for (i in 0 until totalSize step harfSayisi) {
             Row(horizontalArrangement = Arrangement.spacedBy((kutuMesafesi - 2).dp)) {
                 for (j in i until i + harfSayisi) {
-                    if (zamanindaTahminYapılmadiMi) {
+                    if (zamanindaTahminYapilmadiMi) {
 
 
                         var rastgeleKelime = ""
@@ -1336,30 +1337,30 @@ fun LetterGrid(
                         focusRequesters[harfSayisi * currentRow].requestFocus() // Doğrudan 4. indexe (beşinci kutuya) odaklan
                         letters = letters.toMutableList().also {
                             it[0 + harfSayisi * currentRow] = rastgeleKelime[0].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             it[1 + harfSayisi * currentRow] = rastgeleKelime[1].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             it[2 + harfSayisi * currentRow] = rastgeleKelime[2].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             it[3 + harfSayisi * currentRow] = rastgeleKelime[3].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             if (harfSayisi >= 5) {
                                 it[4 + harfSayisi * currentRow] = rastgeleKelime[4].toString()
-                                    .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                    .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                     ?.toString() ?: ""
                             }
                             if (harfSayisi >= 6) {
                                 it[5 + harfSayisi * currentRow] = rastgeleKelime[5].toString()
-                                    .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                    .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                     ?.toString() ?: ""
                             }
                             if (harfSayisi >= 7) {
                                 it[6 + harfSayisi * currentRow] = rastgeleKelime[6].toString()
-                                    .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                    .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                     ?.toString() ?: ""
                             }
 
@@ -1372,7 +1373,7 @@ fun LetterGrid(
 
 
                                 println(rastgeleKelime[i] + " " + bulunacakKelime[i])
-                                if (rastgeleKelime[i].toUpperCase() == bulunacakKelime[i]) {
+                                if (rastgeleKelime[i].uppercaseChar() == bulunacakKelime[i]) {
                                     textColorList[i + harfSayisi * currentRow] =
                                         Color(android.graphics.Color.parseColor("#0AA351"))
                                     puan += 10
@@ -1381,7 +1382,7 @@ fun LetterGrid(
                                     for (j in 0 until harfSayisi) {
                                         println(rastgeleKelime[j] + " " + bulunacakKelime[j])
 
-                                        if (rastgeleKelime[i].toUpperCase() == bulunacakKelime[j] && i != j) {
+                                        if (rastgeleKelime[i].uppercaseChar() == bulunacakKelime[j] && i != j) {
                                             textColorList[i + harfSayisi * currentRow] =
                                                 Color(android.graphics.Color.parseColor("#F2F90C"))
                                             puan += 5
@@ -1457,7 +1458,7 @@ fun LetterGrid(
                                 }
                             }
 
-                            zamanindaTahminYapılmadiMi = false
+                            zamanindaTahminYapilmadiMi = false
                             // zamanı tekrardan sıfırla 10 saniyer kelime boyutunaa göre indexleri ayarla rastgele kelime seç harfleri ona göre ayarla
                             timeLeft1 = 10
                             isTimerRunning1 = true
@@ -1476,7 +1477,7 @@ fun LetterGrid(
                         onValueChange = { value ->
                             if (value.length <= 1) {
                                 letters = letters.toMutableList().also {
-                                    it[j] = value.uppercase().singleOrNull()?.toString() ?: ""
+                                    it[j] =    value.uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()?.toString() ?: ""
                                 }
 
                                 if (value.length == 1 && j < (i + harfSayisi - 1)) {
@@ -1557,7 +1558,7 @@ fun LetterGrid(
 
                                 }
 
-                                if (bulunacakKelime.equals(enteredWord1)) {
+                                if (bulunacakKelime == enteredWord1) {
                                     showErrorDialog2 = true
 
                                 }
@@ -1602,7 +1603,7 @@ fun LetterGrid(
 
                                 }
 
-                                if (bulunacakKelime.equals(enteredWord2)) {
+                                if (bulunacakKelime == enteredWord2) {
                                     showErrorDialog2 = true
                                 }
                                 currentRow++
@@ -1649,7 +1650,7 @@ fun LetterGrid(
 
 
 
-                                if (bulunacakKelime.equals(enteredWord3)) {
+                                if (bulunacakKelime == enteredWord3) {
                                     showErrorDialog2 = true
 
                                 }
@@ -1706,7 +1707,7 @@ fun LetterGrid(
                                 }
 
 
-                                if (bulunacakKelime.equals(enteredWord4)) {
+                                if (bulunacakKelime == enteredWord4) {
                                     showErrorDialog2 = true
                                     // bu kısımlarda kelimeyi bulan kullanıcı varsa veritabanından güncelle
                                 }
@@ -1826,7 +1827,7 @@ fun LetterGrid(
 
 
 
-                                if (bulunacakKelime.equals(enteredWord5)) {
+                                if (bulunacakKelime == enteredWord5) {
                                     showErrorDialog2 = true
                                     println(enteredWord5)
                                 }
@@ -1943,7 +1944,7 @@ fun LetterGrid(
 
 
 
-                                if (bulunacakKelime.equals(enteredWord6)) {
+                                if (bulunacakKelime == enteredWord6) {
                                     showErrorDialog2 = true
                                 }
                                 else if(currentRow + 1 == harfSayisi)
@@ -2054,7 +2055,7 @@ fun LetterGrid(
 
                                 }
 
-                                if (bulunacakKelime.equals(enteredWord7)) {
+                                if (bulunacakKelime == enteredWord7) {
                                     showErrorDialog2 = true
                                 }
                                 else if(currentRow + 1 == harfSayisi)
@@ -2168,17 +2169,17 @@ fun KelimeVarmi(
     var isFindWord = false
 
 
-    if (harfSayisi == 4 && dortHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    if (harfSayisi == 4 && dortHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
         isFindWord = true
 
 
-    } else if (harfSayisi == 5 && besHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    } else if (harfSayisi == 5 && besHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
         isFindWord = true
 
-    } else if (harfSayisi == 6 && altiHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    } else if (harfSayisi == 6 && altiHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
         isFindWord = true
 
-    } else if (harfSayisi == 7 && yediHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    } else if (harfSayisi == 7 && yediHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
 
         isFindWord = true
     }
@@ -2419,6 +2420,18 @@ fun LetterInput(
         enabled = !isLocked, // Kilit durumuna göre etkinliği ayarla
         cursorBrush = SolidColor(Color.Black)
     )
+}
+fun toUpperCaseTr(char: Char): String {
+    return when (char) {
+        'i' -> "İ"
+        'ı' -> "I"
+        'ğ' -> "Ğ"
+        'ü' -> "Ü"
+        'ş' -> "Ş"
+        'ö' -> "Ö"
+        'ç' -> "Ç"
+        else -> char.uppercase()
+    }
 }
 
 
