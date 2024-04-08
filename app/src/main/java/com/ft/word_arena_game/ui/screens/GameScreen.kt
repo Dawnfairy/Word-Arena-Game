@@ -1106,7 +1106,7 @@ fun LetterGrid(
 
 
     var puan = 0
-
+    var timeCount = 0
     var yesilPuan = 0
     var sariPuan = 0
     var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }//burayı true ya çek
@@ -1509,15 +1509,18 @@ fun LetterGrid(
 
         Button(
             onClick = {
-                timeLeft1 = 10
+
+
                 if (rakipOyuncuKelimeyiBulamadiMi) {
                     timeLeft = 0
                     isTimerRunning = false
                 } else {
+
+                    timeCount += (70 - timeLeft - timeLeft1)
                     timeLeft = 60
                     isTimerRunning = true
                 }
-
+                timeLeft1 = 10
                 isTimerRunning1 = true
                 if (letters.slice(currentRow * harfSayisi until (currentRow + 1) * harfSayisi)
                         .all { it.isNotEmpty() }
@@ -2420,18 +2423,6 @@ fun LetterInput(
         enabled = !isLocked, // Kilit durumuna göre etkinliği ayarla
         cursorBrush = SolidColor(Color.Black)
     )
-}
-fun toUpperCaseTr(char: Char): String {
-    return when (char) {
-        'i' -> "İ"
-        'ı' -> "I"
-        'ğ' -> "Ğ"
-        'ü' -> "Ü"
-        'ş' -> "Ş"
-        'ö' -> "Ö"
-        'ç' -> "Ç"
-        else -> char.uppercase()
-    }
 }
 
 
