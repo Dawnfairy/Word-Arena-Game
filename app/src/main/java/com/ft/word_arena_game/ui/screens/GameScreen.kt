@@ -620,7 +620,6 @@ fun GameScreen(
         kutuMesafesi = 12
         yaziBoyutu = 24
 
-
     } else if (harfSayisi == 6) {
         kutuBoyutu = 45
         kutuMesafesi = 8
@@ -998,7 +997,8 @@ fun GameScreen(
                         selectedRoom,
                         user.uid,
                         rivalId,
-                        navController
+                        navController,
+                        timeLeft
                     )
                 }
             }
@@ -1116,11 +1116,15 @@ fun LetterGrid(
     selectedRoom: String,
     userId: String,
     rivalId: String,
-    navController: NavController
+    navController: NavController,
+    timeLeftKopya: Int
 ) {
 
-    var puan = 0
 
+    var puan = 0
+    var timeCount = 0
+    var yesilPuan = 0
+    var sariPuan = 0
     var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }//burayı true ya çek
     var zamanindaTahminYapilmadiMi by remember { mutableStateOf(false) }
     var rivalScore by remember { mutableStateOf(0) } //
@@ -1353,48 +1357,55 @@ fun LetterGrid(
                         focusRequesters[harfSayisi * currentRow].requestFocus() // Doğrudan 4. indexe (beşinci kutuya) odaklan
                         letters = letters.toMutableList().also {
                             it[0 + harfSayisi * currentRow] = rastgeleKelime[0].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             it[1 + harfSayisi * currentRow] = rastgeleKelime[1].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             it[2 + harfSayisi * currentRow] = rastgeleKelime[2].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             it[3 + harfSayisi * currentRow] = rastgeleKelime[3].toString()
-                                .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                 ?.toString() ?: ""
                             if (harfSayisi >= 5) {
                                 it[4 + harfSayisi * currentRow] = rastgeleKelime[4].toString()
-                                    .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                    .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                     ?.toString() ?: ""
                             }
                             if (harfSayisi >= 6) {
                                 it[5 + harfSayisi * currentRow] = rastgeleKelime[5].toString()
-                                    .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                    .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                     ?.toString() ?: ""
                             }
                             if (harfSayisi >= 7) {
                                 it[6 + harfSayisi * currentRow] = rastgeleKelime[6].toString()
-                                    .toUpperCase(Locale.forLanguageTag("tr-TR")).singleOrNull()
+                                    .uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()
                                     ?.toString() ?: ""
                             }
 
 
 
+                            puan = 0
+                            yesilPuan = 0
+                            sariPuan = 0
                             for (i in 0 until harfSayisi) {
 
                                 println(rastgeleKelime[i] + " " + bulunacakKelime[i])
-                                if (rastgeleKelime[i].toUpperCase() == bulunacakKelime[i]) {
+                                if (rastgeleKelime[i].uppercaseChar() == bulunacakKelime[i]) {
                                     textColorList[i + harfSayisi * currentRow] =
                                         Color(android.graphics.Color.parseColor("#0AA351"))
+                                    puan += 10
+                                    yesilPuan+=10
                                 } else {
                                     for (j in 0 until harfSayisi) {
                                         println(rastgeleKelime[j] + " " + bulunacakKelime[j])
 
-                                        if (rastgeleKelime[i].toUpperCase() == bulunacakKelime[j] && i != j) {
+                                        if (rastgeleKelime[i].uppercaseChar() == bulunacakKelime[j] && i != j) {
                                             textColorList[i + harfSayisi * currentRow] =
                                                 Color(android.graphics.Color.parseColor("#F2F90C"))
+                                            puan += 5
+                                            sariPuan+=5
                                         }
 
                                     }
@@ -1406,6 +1417,66 @@ fun LetterGrid(
                                 showErrorDialog2 = true
 
                             }
+                            else if(currentRow + 1 == harfSayisi)
+                            {
+
+                                puan += timeLeftKopya
+                                println("puannnn : $puan ")
+                                updateGameInfoInRoom(
+                                    selectedGameType,
+                                    selectedRoom,
+                                    userId,
+                                    hashMapOf(
+                                        "hasGuessingRight" to false,
+                                        "puan" to puan
+                                    )
+                                )
+                            }
+                            if (currentRow + 1 == harfSayisi && rakipOyuncuKelimeyiBulamadiMi) {
+
+                                getRivalScoreOnce(
+                                    selectedGameType,
+                                    selectedRoom,
+                                    rivalId
+                                ) { score ->
+                                    rivalScore = score
+                                    println("rakip puannnn : $rivalScore ")
+
+                                    when {
+                                        puan > rivalScore -> updateGamerWinnerInRoom(
+                                            selectedGameType,
+                                            selectedRoom,
+                                            userId,
+                                            rivalId,
+                                            "kazanan",
+                                            "kaybeden"
+                                        ) {
+                                            navController.popBackStack()
+                                        }
+                                        puan < rivalScore -> updateGamerWinnerInRoom(
+                                            selectedGameType,
+                                            selectedRoom,
+                                            userId,
+                                            rivalId,
+                                            "kaybeden",
+                                            "kazanan"
+                                        ) {
+                                            navController.popBackStack()
+                                        }
+                                        else -> updateGamerWinnerInRoom(
+                                            selectedGameType,
+                                            selectedRoom,
+                                            userId,
+                                            rivalId,
+                                            "berabere",
+                                            "berabere"
+                                        ) {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                }
+                            }
+
                             zamanindaTahminYapilmadiMi = false
                             // zamanı tekrardan sıfırla 10 saniyer kelime boyutunaa göre indexleri ayarla rastgele kelime seç harfleri ona göre ayarla
                             timeLeft1 = 10
@@ -1425,7 +1496,7 @@ fun LetterGrid(
                         onValueChange = { value ->
                             if (value.length <= 1) {
                                 letters = letters.toMutableList().also {
-                                    it[j] = value.uppercase().singleOrNull()?.toString() ?: ""
+                                    it[j] =    value.uppercase(Locale.forLanguageTag("tr-TR")).singleOrNull()?.toString() ?: ""
                                 }
 
                                 if (value.length == 1 && j < (i + harfSayisi - 1)) {
@@ -1454,17 +1525,21 @@ fun LetterGrid(
         }
 
 
+
         Button(
             onClick = {
-                timeLeft1 = 10
+
+
                 if (rakipOyuncuKelimeyiBulamadiMi) {
                     timeLeft = 0
                     isTimerRunning = false
                 } else {
+
+                    timeCount += (70 - timeLeft - timeLeft1)
                     timeLeft = 60
                     isTimerRunning = true
                 }
-
+                timeLeft1 = 10
                 isTimerRunning1 = true
                 if (letters.slice(currentRow * harfSayisi until (currentRow + 1) * harfSayisi)
                         .all { it.isNotEmpty() }
@@ -1505,7 +1580,7 @@ fun LetterGrid(
 
                                 }
 
-                                if (bulunacakKelime.equals(enteredWord1)) {
+                                if (bulunacakKelime == enteredWord1) {
                                     showErrorDialog2 = true
 
                                 }
@@ -1550,7 +1625,7 @@ fun LetterGrid(
 
                                 }
 
-                                if (bulunacakKelime.equals(enteredWord2)) {
+                                if (bulunacakKelime == enteredWord2) {
                                     showErrorDialog2 = true
                                 }
                                 currentRow++
@@ -1597,7 +1672,7 @@ fun LetterGrid(
 
 
 
-                                if (bulunacakKelime.equals(enteredWord3)) {
+                                if (bulunacakKelime == enteredWord3) {
                                     showErrorDialog2 = true
 
                                 }
@@ -1610,6 +1685,8 @@ fun LetterGrid(
 
                         } else if (currentRow == 3) {
                             puan = 0
+                            sariPuan  = 0
+                            yesilPuan = 0
                             enteredWord4 = letters.joinToString(separator = "")
                             enteredWord4 = enteredWord4.takeLast(harfSayisi)
                             println(enteredWord4)
@@ -1633,10 +1710,12 @@ fun LetterGrid(
                                         textColorList[i + harfSayisi * currentRow] =
                                             Color(android.graphics.Color.parseColor("#0AA351"))
                                         puan += 10
+                                        yesilPuan+=10
                                     } else {
                                         for (j in 0 until harfSayisi) {
                                             if (enteredWord4[i] == bulunacakKelime[j] && i != j) {
                                                 puan += 5
+                                                sariPuan+=5
 
                                                 textColorList[i + harfSayisi * currentRow] =
                                                     Color(android.graphics.Color.parseColor("#F2F90C"))
@@ -1650,14 +1729,14 @@ fun LetterGrid(
                                 }
 
 
-                                if (bulunacakKelime.equals(enteredWord4)) {
+                                if (bulunacakKelime == enteredWord4) {
                                     showErrorDialog2 = true
                                     // bu kısımlarda kelimeyi bulan kullanıcı varsa veritabanından güncelle
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
 //false tahmin hakkı bitti
-                                    puan += timeLeft
+                                    puan += timeLeftKopya
                                     println("puannnn : $puan ")
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -1728,6 +1807,8 @@ fun LetterGrid(
                         } else if (currentRow == 4 && harfSayisi >= 5) {
 
                             puan = 0
+                            yesilPuan = 0
+                            sariPuan = 0
 
                             enteredWord5 = letters.joinToString(separator = "")
                             enteredWord5 = enteredWord5.takeLast(harfSayisi)
@@ -1752,12 +1833,14 @@ fun LetterGrid(
                                         textColorList[i + harfSayisi * currentRow] =
                                             Color(android.graphics.Color.parseColor("#0AA351"))
                                         puan += 10
+                                        yesilPuan +=10
                                     } else {
                                         for (j in 0 until harfSayisi) {
                                             if (enteredWord5[i] == bulunacakKelime[j] && i != j) {
                                                 textColorList[i + harfSayisi * currentRow] =
                                                     Color(android.graphics.Color.parseColor("#F2F90C"))
                                                 puan += 5
+                                                sariPuan+=5
                                             }
 
                                         }
@@ -1769,14 +1852,14 @@ fun LetterGrid(
 
 
 
-                                if (bulunacakKelime.equals(enteredWord5)) {
+                                if (bulunacakKelime == enteredWord5) {
                                     showErrorDialog2 = true
                                     println(enteredWord5)
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
 //false tahmin hakkı bitti
-                                    puan += timeLeft
+                                    puan += timeLeftKopya
                                     println("puannnn : $puan ")
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -1846,6 +1929,8 @@ fun LetterGrid(
 
                         } else if (currentRow == 5 && harfSayisi >= 6) {
                             puan = 0
+                            yesilPuan = 0
+                            sariPuan = 0
                             enteredWord6 = letters.joinToString(separator = "")
                             enteredWord6 = enteredWord6.takeLast(harfSayisi)
                             println(enteredWord6)
@@ -1869,12 +1954,14 @@ fun LetterGrid(
                                         textColorList[i + harfSayisi * currentRow] =
                                             Color(android.graphics.Color.parseColor("#0AA351"))
                                         puan += 10
+                                        yesilPuan+=10
                                     } else {
                                         for (j in 0 until harfSayisi) {
                                             if (enteredWord6[i] == bulunacakKelime[j] && i != j) {
                                                 textColorList[i + harfSayisi * currentRow] =
                                                     Color(android.graphics.Color.parseColor("#F2F90C"))
                                                 puan += 5
+                                                sariPuan+=5
                                             }
 
                                         }
@@ -1885,13 +1972,13 @@ fun LetterGrid(
 
 
 
-                                if (bulunacakKelime.equals(enteredWord6)) {
+                                if (bulunacakKelime == enteredWord6) {
                                     showErrorDialog2 = true
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
 //false tahmin hakkı bitti
-                                    puan += timeLeft
+                                    puan += timeLeftKopya
                                     println("puannnn : $puan ")
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -1960,6 +2047,9 @@ fun LetterGrid(
 
 
                         } else if (currentRow == 6 && harfSayisi >= 7) {
+                            puan = 0
+                            yesilPuan = 0
+                            sariPuan = 0
                             enteredWord7 = letters.joinToString(separator = "")
                             enteredWord7 = enteredWord7.takeLast(harfSayisi)
                             println(enteredWord7)
@@ -1981,12 +2071,14 @@ fun LetterGrid(
                                         textColorList[i + harfSayisi * currentRow] =
                                             Color(android.graphics.Color.parseColor("#0AA351"))
                                         puan += 10
+                                        yesilPuan +=10
                                     } else {
                                         for (j in 0 until harfSayisi) {
                                             if (enteredWord7[i] == bulunacakKelime[j] && i != j) {
                                                 textColorList[i + harfSayisi * currentRow] =
                                                     Color(android.graphics.Color.parseColor("#F2F90C"))
                                                 puan += 5
+                                                sariPuan+=5
                                             }
 
                                         }
@@ -1994,13 +2086,13 @@ fun LetterGrid(
 
                                 }
 
-                                if (bulunacakKelime.equals(enteredWord7)) {
+                                if (bulunacakKelime == enteredWord7) {
                                     showErrorDialog2 = true
                                 }
                                 else if(currentRow + 1 == harfSayisi)
                                 {
 //false tahmin hakkı bitti
-                                    puan += timeLeft
+                                    puan += timeLeftKopya
                                     println("puannnn : $puan ")
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -2082,9 +2174,6 @@ fun LetterGrid(
                 }*/
             },
 
-
-
-
             enabled = if (harfSayisi > currentRow) {
                 letters.slice(currentRow * harfSayisi until (currentRow + 1) * harfSayisi)
                     .all { it.isNotEmpty() }
@@ -2119,17 +2208,17 @@ fun KelimeVarmi(
     var isFindWord = false
 
 
-    if (harfSayisi == 4 && dortHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    if (harfSayisi == 4 && dortHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
         isFindWord = true
 
 
-    } else if (harfSayisi == 5 && besHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    } else if (harfSayisi == 5 && besHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
         isFindWord = true
 
-    } else if (harfSayisi == 6 && altiHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    } else if (harfSayisi == 6 && altiHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
         isFindWord = true
 
-    } else if (harfSayisi == 7 && yediHarfliKelimeler.map { it.uppercase() }.contains(kelime)) {
+    } else if (harfSayisi == 7 && yediHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(kelime)) {
 
         isFindWord = true
     }
