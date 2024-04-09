@@ -2,14 +2,14 @@ package com.ft.word_arena_game.ui.screens
 
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.graphics.Bitmap
 import android.util.Log
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,9 +59,16 @@ import com.ft.word_arena_game.ui.components.GameConnection
 import com.ft.word_arena_game.ui.components.GameExit
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.util.Locale
 import kotlin.random.Random
 
@@ -79,7 +86,7 @@ fun GameScreen(
     val user = Firebase.auth.currentUser
     val context = LocalContext.current
     val connect = GameConnection(context = context)
-//oyuna aynanda başlama hatalı//ss almaya bakkkk
+//ss almaya bakkkk
     val dortHarfliKelimeler = listOf(
         "konu",
         "olay",
@@ -551,7 +558,9 @@ fun GameScreen(
                     Button(
                         onClick = {
                             //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
-                            navController.popBackStack() }
+                                                                            navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                            //navController.popBackStack()
+                        }
                     ) {
                         Text("Tamam")
                     }
@@ -569,7 +578,9 @@ fun GameScreen(
                     Button(
                         onClick = {
                             //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
-                            navController.popBackStack() }
+                                                                            navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                            //navController.popBackStack()
+                    }
                     ) {
                         Text("Tamam")
                     }
@@ -587,7 +598,9 @@ fun GameScreen(
                     Button(
                         onClick = {
                             //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
-                            navController.popBackStack() }
+                                                                           navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                            //navController.popBackStack()
+                        }
                     ) {
                         Text("Tamam")
                     }
@@ -709,6 +722,7 @@ fun GameScreen(
                                 "kaybeden"
                             ) {
                                 showCircularProgress = false
+                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                             }
                             val snackbarHostState = remember { SnackbarHostState() }
@@ -735,6 +749,7 @@ fun GameScreen(
                                 "kazanan"
                             ) {
                                 showCircularProgress = false
+                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                             }
                             val snackbarHostState = remember { SnackbarHostState() }
@@ -1064,7 +1079,8 @@ fun GameScreen(
                                         "kaybeden",
                                         "kazanan"
                                     ) {
-                                        navController.popBackStack()
+                                        navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                     }
                                 }
 
@@ -1103,11 +1119,10 @@ fun LetterGrid(
     navController: NavController
 ) {
 
-
     var puan = 0
 
     var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }//burayı true ya çek
-    var zamanindaTahminYapılmadiMi by remember { mutableStateOf(false) }
+    var zamanindaTahminYapilmadiMi by remember { mutableStateOf(false) }
     var rivalScore by remember { mutableStateOf(0) } //
 
     listenForOtherGamerGuessingRightLoss(
@@ -1151,7 +1166,9 @@ fun LetterGrid(
                             rivalId,
                             "kazanan",
                             "kaybeden"
-                        ) {navController.popBackStack()
+                        ) {
+                            navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                         }
 
                     }
@@ -1180,7 +1197,9 @@ fun LetterGrid(
                             rivalId,
                             "kaybeden",
                             "kazanan"
-                        ) {navController.popBackStack()
+                        ) {
+                            navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                         }
 
                     }
@@ -1266,7 +1285,7 @@ fun LetterGrid(
             if (rakipOyuncuKelimeyiBulamadiMi) {
                 isTimerRunning = false
 
-                zamanindaTahminYapılmadiMi = true
+                zamanindaTahminYapilmadiMi = true
 
             } else {
                 showErrorDialog3 = true
@@ -1306,7 +1325,7 @@ fun LetterGrid(
         for (i in 0 until totalSize step harfSayisi) {
             Row(horizontalArrangement = Arrangement.spacedBy((kutuMesafesi - 2).dp)) {
                 for (j in i until i + harfSayisi) {
-                    if (zamanindaTahminYapılmadiMi) {
+                    if (zamanindaTahminYapilmadiMi) {
 
 
                         var rastgeleKelime = ""
@@ -1387,7 +1406,7 @@ fun LetterGrid(
                                 showErrorDialog2 = true
 
                             }
-                            zamanindaTahminYapılmadiMi = false
+                            zamanindaTahminYapilmadiMi = false
                             // zamanı tekrardan sıfırla 10 saniyer kelime boyutunaa göre indexleri ayarla rastgele kelime seç harfleri ona göre ayarla
                             timeLeft1 = 10
                             isTimerRunning1 = true
@@ -1433,7 +1452,6 @@ fun LetterGrid(
 
             Spacer(modifier = Modifier.padding(8.dp))
         }
-
 
 
         Button(
@@ -1670,7 +1688,8 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -1680,7 +1699,8 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             else -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -1690,7 +1710,8 @@ fun LetterGrid(
                                                 "berabere",
                                                 "berabere"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                         }
                                     }
@@ -1786,7 +1807,8 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -1796,7 +1818,8 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             else -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -1806,7 +1829,8 @@ fun LetterGrid(
                                                 "berabere",
                                                 "berabere"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                         }
                                     }
@@ -1898,7 +1922,8 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -1908,7 +1933,8 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             else -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -1918,7 +1944,8 @@ fun LetterGrid(
                                                 "berabere",
                                                 "berabere"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                         }
                                     }
@@ -2004,7 +2031,8 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -2014,7 +2042,8 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+
                                             }
                                             else -> updateGamerWinnerInRoom(
                                                 selectedGameType,
@@ -2024,7 +2053,7 @@ fun LetterGrid(
                                                 "berabere",
                                                 "berabere"
                                             ) {
-                                                navController.popBackStack()
+                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
                                             }
                                         }
                                     }
@@ -2045,7 +2074,16 @@ fun LetterGrid(
                         keyboardController?.hide() // Klavyeyi gizle
                     }
                 }
+                /*
+                if (context is Activity) {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        captureAndUploadScreenshot(context, userId)
+                    }
+                }*/
             },
+
+
+
 
             enabled = if (harfSayisi > currentRow) {
                 letters.slice(currentRow * harfSayisi until (currentRow + 1) * harfSayisi)
@@ -2289,6 +2327,76 @@ fun getRivalScoreOnce(
         Log.e("GetRivalScoreOnce", "Error getting document: ", e)
     }
 }
+
+suspend fun captureAndUploadScreenshot(activity: Activity, userId: String) {
+    try {
+        // Arka planda ekran görüntüsü al
+        val bitmap = withContext(Dispatchers.IO) { takeScreenshot(activity) }
+        // Alınan ekran görüntüsünü yükle
+        val fileName = "screenshot_${System.currentTimeMillis()}.png"
+        val imageUrl = withContext(Dispatchers.IO) {uploadImage(bitmap, fileName)}
+        // Firebase'e URL'i kaydet
+        saveScreenshotToFirestore(userId, imageUrl)
+    } catch (e: Exception) {
+        // Hata işleme
+        Log.e("captureAndUploadScreenshot", "Hata meydana geldi: $e")
+    }
+}
+
+
+suspend fun takeScreenshot(activity: Activity): Bitmap {
+    return withContext(Dispatchers.IO) {
+        val view = activity.window.decorView
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        view.draw(canvas)
+        bitmap
+    }
+}
+
+suspend fun uploadImage(bitmap: Bitmap, fileName: String): String = withContext(Dispatchers.IO) {
+    val baos = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
+    val data = baos.toByteArray()
+
+    val storageRef = FirebaseStorage.getInstance().reference.child("screenshots/$fileName")
+    val uploadTask = storageRef.putBytes(data).await()
+    return@withContext storageRef.downloadUrl.await().toString()
+}
+suspend fun saveScreenshotToFirestore(userId: String, imageUrl: String) {
+    val firestore = FirebaseFirestore.getInstance()
+
+    val screenshotInfo = hashMapOf(
+        "imageUrl" to imageUrl,
+        "timestamp" to FieldValue.serverTimestamp() // Sunucu zaman damgası
+    )
+
+    firestore.collection("user_screenshots").document(userId)
+        .collection("screenshots")
+        .add(screenshotInfo)
+        .await()
+}
+fun fetchLatestScreenshot(userId: String, onImageUrlReceived: (String) -> Unit) {
+    val firestore = FirebaseFirestore.getInstance()
+
+    firestore.collection("users").document(userId)
+        .collection("screenshots")
+        .orderBy("timestamp", Query.Direction.DESCENDING) // En yeni ekran görüntüsü ilk sırada
+        .limit(1) // Sadece en yeniyi al
+        .get()
+        .addOnSuccessListener { documents ->
+            if (!documents.isEmpty) {
+                val imageUrl = documents.documents[0].getString("imageUrl")
+                imageUrl?.let {
+                    onImageUrlReceived(it)
+                }
+            }
+        }
+        .addOnFailureListener { e ->
+            Log.e("Firestore", "Error fetching latest screenshot", e)
+        }
+}
+
 
 
 @Composable

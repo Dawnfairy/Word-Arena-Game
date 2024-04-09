@@ -8,12 +8,14 @@ import com.ft.word_arena_game.ui.screens.LoginScreen
 import com.ft.word_arena_game.ui.screens.SignUpScreen
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ft.word_arena_game.ui.navigation.Destinations.FinishRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.GameRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.LoginRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.RoomRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.RoomSelectionRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.RoomTypeSelectionRoute
 import com.ft.word_arena_game.ui.navigation.Destinations.SignUpRoute
+import com.ft.word_arena_game.ui.screens.FinishScreen
 import com.ft.word_arena_game.ui.screens.GameScreen
 import com.ft.word_arena_game.ui.screens.RoomScreen
 import com.ft.word_arena_game.ui.screens.RoomSelectionScreen
@@ -27,6 +29,7 @@ object Destinations {
     const val RoomSelectionRoute = "roomSelection/{roomType}"
     const val RoomRoute = "room/{roomType}/{roomNumber}"
     const val GameRoute = "game/{roomType}/{roomNumber}/{randomLetter}/{wordIndex}/{rivalId}"
+    const val FinishRoute = "finish/{roomType}/{roomNumber}/{rivalId}"
 }
 
 @Composable
@@ -74,6 +77,18 @@ fun NavGraph(startDestination: String = "login") {
             val wordIndex = backStackEntry.arguments?.getInt("wordIndex") ?: -1
             val rivalId = backStackEntry.arguments?.getString("rivalId") ?: ""
             GameScreen(navController, roomType, roomNumber, randomLetter, wordIndex, rivalId)
+        }
+        composable(
+            route = FinishRoute,
+            arguments = listOf(
+                navArgument("roomType") { type = NavType.BoolType },
+                navArgument("roomNumber") { type = NavType.StringType },
+                navArgument("rivalId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val roomType = backStackEntry.arguments?.getBoolean("roomType") ?: false
+            val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: ""
+            val rivalId = backStackEntry.arguments?.getString("rivalId") ?: ""
+            FinishScreen(navController, roomType, roomNumber, rivalId)
         }
     }
 }
