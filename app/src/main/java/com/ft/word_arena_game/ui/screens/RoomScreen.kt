@@ -783,7 +783,11 @@ fun updateGamerInfoInRoom(gameType: Boolean, roomType: String, userId: String) {
     val db = FirebaseFirestore.getInstance()
     val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer$roomType/$userId"
 
-    val updateMap = hashMapOf<String, Any>("userId" to userId, "status" to "oyunda")
+    val updateMap = hashMapOf<String, Any>(
+        "userId" to userId,
+        "status" to "oyunda",
+        "puan" to 0,
+        "hasGuessingRight" to false)
 
     db.document(gamerPath).set(updateMap, SetOptions.merge())
         .addOnSuccessListener {

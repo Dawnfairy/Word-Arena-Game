@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Bitmap
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -72,6 +73,12 @@ import java.io.ByteArrayOutputStream
 import java.util.Locale
 import kotlin.random.Random
 
+enum class PlayerStatus {
+    UserWon,
+    UserLost,
+    Restart,
+    Undefined
+}
 
 @Composable
 fun GameScreen(
@@ -549,7 +556,6 @@ fun GameScreen(
 
     when (playerStatus) {
         "kazanan" -> {
-            // Kazanan için UI
             AlertDialog(
                 onDismissRequest = { showErrorDialog = false },
                 title = { Text(text = "Tebrikler!") },
@@ -598,6 +604,7 @@ fun GameScreen(
                     Button(
                         onClick = {
                             //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
+
                                                                            navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
                             //navController.popBackStack()
                         }
@@ -642,12 +649,9 @@ fun GameScreen(
             if (showGameScreen) {
                 var isTimerRunning by remember { mutableStateOf(true) } // Timer'ın çalışıp çalışmadığını kontrol eden fla
 
-
-
                 val progress = remember(timeLeft, 60) {
                     (timeLeft.toFloat() / 60.toFloat())
                 }
-
                 LaunchedEffect(key1 = timeLeft) {
                     if (timeLeft > 0) {
                         delay(1000) // 1 saniye bekleyin
@@ -696,87 +700,44 @@ fun GameScreen(
 
 
                 } else {
-                    var showSnackbar by remember { mutableStateOf("") }
+                    val snackbarHostState = remember { SnackbarHostState() }
+                    var gameStatus by remember { mutableStateOf(PlayerStatus.Undefined) }
 
                     listenForGameReadyStatus(selectedGameType, selectedRoom) { readyStatusList ->
-                        val readyPlayers =
-                            readyStatusList.filter { it.isReady }.joinToString { it.userId }
-                        showSnackbar = if (readyPlayers == user?.uid) {
-                            "a"
-                        } else if (readyPlayers.isEmpty()) {
-                            "c"
-                        } else {
-                            "b"
+                        val isMyUserReady = readyStatusList.any { it.userId == user?.uid && it.isReady }
+                        val isMyRivalReady = readyStatusList.any { it.userId == rivalId && it.isReady }
+
+                        gameStatus = when {
+                            isMyUserReady && !isMyRivalReady -> PlayerStatus.UserWon
+                            !isMyUserReady && isMyRivalReady -> PlayerStatus.UserLost
+                            else -> PlayerStatus.Restart // Diğer durumlar için oyunun yeniden başlaması gerekebilir
                         }
                     }
-                    if (showSnackbar == "a") {
-
-                        if (user != null) {
-                            updateGamerWinnerInRoom(
-                                selectedGameType,
-                                selectedRoom,
-                                user.uid,
-                                rivalId,
-                                "kazanan",
-                                "kaybeden"
-                            ) {
+                    LaunchedEffect(gameStatus) {
+                        when (gameStatus) {
+                            PlayerStatus.UserWon -> {
+                                updateGamerWinnerInRoom(selectedGameType, selectedRoom, user?.uid ?: "", rivalId, "kazanan", "kaybeden") {
+                                    showCircularProgress = false
+                                }
+                                Toast.makeText(context, "Rakip oyuncu kelime girişi yapmadı. Oyunu kazandınız.", Toast.LENGTH_LONG).show()
+                            }
+                            PlayerStatus.UserLost -> {
+                                updateGamerWinnerInRoom(selectedGameType, selectedRoom, user?.uid ?: "", rivalId, "kaybeden", "kazanan") {
+                                    showCircularProgress = false
+                                }
+                                Toast.makeText(context, "Kelime girişi yapmadınız. Oyunu kaybettiniz.", Toast.LENGTH_LONG).show()
+                            }
+                            PlayerStatus.Restart -> {
                                 showCircularProgress = false
-                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
-
-                            }
-                            val snackbarHostState = remember { SnackbarHostState() }
-                            LaunchedEffect(key1 = true) {
-                                snackbarHostState.showSnackbar(
-                                    message = "Rakip oyuncu kelime girişi yapmadı. Oyunu kazandınız.",
-                                    duration = SnackbarDuration.Short
-                                )
+                                snackbarHostState.showSnackbar("Kelime girişi yapılmadı oyun tekrar başlıyor.", duration = SnackbarDuration.Short)
                                 delay(2000) // 2 saniye bekleyin
-                                navController.popBackStack() // Oda ekranına geri dön
+                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
                             }
-                            SnackbarHost(hostState = snackbarHostState)
+                            else -> Unit
                         }
-
-
-                    } else if (showSnackbar == "b") {
-                        if (user != null) {
-                            updateGamerWinnerInRoom(
-                                selectedGameType,
-                                selectedRoom,
-                                user.uid,
-                                rivalId,
-                                "kaybeden",
-                                "kazanan"
-                            ) {
-                                showCircularProgress = false
-                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
-
-                            }
-                            val snackbarHostState = remember { SnackbarHostState() }
-                            LaunchedEffect(key1 = true) {
-                                snackbarHostState.showSnackbar(
-                                    message = "Kelime girişi yapmadınız. Oyunu kaybettiniz.",
-                                    duration = SnackbarDuration.Short
-                                )
-                                delay(2000) // 2 saniye bekleyin
-                                navController.popBackStack() // Oda ekranına geri dön
-                            }
-
-                            SnackbarHost(hostState = snackbarHostState)
-                        }
-                    } else if (showSnackbar == "c") {
-                        showCircularProgress = false
-                        val snackbarHostState = remember { SnackbarHostState() }
-
-                        LaunchedEffect(key1 = true) {
-                            snackbarHostState.showSnackbar(
-                                message = "Kelime girişi yapılmadı oyun tekrar başlıyor.",
-                                duration = SnackbarDuration.Short
-                            )
-                            delay(2000) // 2 saniye bekleyin
-                            //navController.popBackStack() // Oda ekranına geri dön
-                            navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
-                        }
-
+                    }
+                    // Oyun yeniden başlatılırken Snackbar göster
+                    if (gameStatus == PlayerStatus.Restart) {
                         SnackbarHost(hostState = snackbarHostState)
                     }
                 }
@@ -848,7 +809,6 @@ fun GameScreen(
                 }
 
                 Button(
-
                     onClick = {
                         focusManager.clearFocus()
 
@@ -973,7 +933,7 @@ fun GameScreen(
             }
 
             if (!showGameScreen) {
-                var bulunacakKelime by remember { mutableStateOf("") } //
+                var bulunacakKelime by remember { mutableStateOf("") }
                 if (user != null) {
                     listenForOtherGamerWord(
                         selectedGameType,
@@ -1079,8 +1039,7 @@ fun GameScreen(
                                         "kaybeden",
                                         "kazanan"
                                     ) {
-                                        navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
-
+                                        //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
                                     }
                                 }
 
@@ -1091,12 +1050,8 @@ fun GameScreen(
                     }
                 )
             }
-
-
         }
-
     }
-
 }
 
 
@@ -1122,7 +1077,7 @@ fun LetterGrid(
 
 
     var puan = 0
-    var timeCount = 0
+    var timeCount by remember { mutableStateOf(0)}
     var yesilPuan = 0
     var sariPuan = 0
     var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }//burayı true ya çek
@@ -1171,7 +1126,7 @@ fun LetterGrid(
                             "kazanan",
                             "kaybeden"
                         ) {
-                            navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                            //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                         }
 
@@ -1202,7 +1157,7 @@ fun LetterGrid(
                             "kaybeden",
                             "kazanan"
                         ) {
-                            navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                            //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                         }
 
@@ -1428,7 +1383,11 @@ fun LetterGrid(
                                     userId,
                                     hashMapOf(
                                         "hasGuessingRight" to false,
-                                        "puan" to puan
+                                        "puan" to puan,
+                                        "saripuan" to sariPuan,
+                                        "yesilpuan" to yesilPuan,
+                                        "kalansaniye" to timeLeftKopya,
+                                        "tahminsüresi" to timeCount
                                     )
                                 )
                             }
@@ -1451,7 +1410,7 @@ fun LetterGrid(
                                             "kazanan",
                                             "kaybeden"
                                         ) {
-                                            navController.popBackStack()
+                                            //navController.popBackStack()
                                         }
                                         puan < rivalScore -> updateGamerWinnerInRoom(
                                             selectedGameType,
@@ -1461,17 +1420,19 @@ fun LetterGrid(
                                             "kaybeden",
                                             "kazanan"
                                         ) {
-                                            navController.popBackStack()
+                                            //navController.popBackStack()
                                         }
-                                        else -> updateGamerWinnerInRoom(
-                                            selectedGameType,
-                                            selectedRoom,
-                                            userId,
-                                            rivalId,
-                                            "berabere",
-                                            "berabere"
-                                        ) {
-                                            navController.popBackStack()
+                                        else -> if(puan != 0){
+                                            updateGamerWinnerInRoom(
+                                                selectedGameType,
+                                                selectedRoom,
+                                                userId,
+                                                rivalId,
+                                                "berabere",
+                                                "berabere"
+                                            ) {
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                            }
                                         }
                                     }
                                 }
@@ -1744,7 +1705,11 @@ fun LetterGrid(
                                         userId,
                                         hashMapOf(
                                             "hasGuessingRight" to false,
-                                            "puan" to puan
+                                            "puan" to puan,
+                                            "saripuan" to sariPuan,
+                                            "yesilpuan" to yesilPuan,
+                                            "kalansaniye" to timeLeftKopya,
+                                            "tahminsüresi" to timeCount
                                         )
                                     )
                                 }
@@ -1767,7 +1732,7 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
@@ -1778,19 +1743,20 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
-                                            else -> updateGamerWinnerInRoom(
-                                                selectedGameType,
-                                                selectedRoom,
-                                                userId,
-                                                rivalId,
-                                                "berabere",
-                                                "berabere"
-                                            ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
-
+                                            else -> if(puan != 0){
+                                                updateGamerWinnerInRoom(
+                                                    selectedGameType,
+                                                    selectedRoom,
+                                                    userId,
+                                                    rivalId,
+                                                    "berabere",
+                                                    "berabere"
+                                                ) {
+                                                    //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                }
                                             }
                                         }
                                     }
@@ -1867,7 +1833,11 @@ fun LetterGrid(
                                         userId,
                                         hashMapOf(
                                             "hasGuessingRight" to false,
-                                            "puan" to puan
+                                            "puan" to puan,
+                                            "saripuan" to sariPuan,
+                                            "yesilpuan" to yesilPuan,
+                                            "kalansaniye" to timeLeftKopya,
+                                            "tahminsüresi" to timeCount
                                         )
                                     )
                                 }
@@ -1890,7 +1860,7 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
@@ -1901,19 +1871,20 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
-                                            else -> updateGamerWinnerInRoom(
-                                                selectedGameType,
-                                                selectedRoom,
-                                                userId,
-                                                rivalId,
-                                                "berabere",
-                                                "berabere"
-                                            ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
-
+                                            else -> if(puan != 0){
+                                                updateGamerWinnerInRoom(
+                                                    selectedGameType,
+                                                    selectedRoom,
+                                                    userId,
+                                                    rivalId,
+                                                    "berabere",
+                                                    "berabere"
+                                                ) {
+                                                    //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                }
                                             }
                                         }
                                     }
@@ -1986,7 +1957,11 @@ fun LetterGrid(
                                         userId,
                                         hashMapOf(
                                             "hasGuessingRight" to false,
-                                            "puan" to puan
+                                            "puan" to puan,
+                                            "saripuan" to sariPuan,
+                                            "yesilpuan" to yesilPuan,
+                                            "kalansaniye" to timeLeftKopya,
+                                            "tahminsüresi" to timeCount
                                         )
                                     )
                                 }
@@ -2009,7 +1984,7 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
@@ -2020,19 +1995,20 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
-                                            else -> updateGamerWinnerInRoom(
-                                                selectedGameType,
-                                                selectedRoom,
-                                                userId,
-                                                rivalId,
-                                                "berabere",
-                                                "berabere"
-                                            ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
-
+                                            else -> if(puan != 0){
+                                                updateGamerWinnerInRoom(
+                                                    selectedGameType,
+                                                    selectedRoom,
+                                                    userId,
+                                                    rivalId,
+                                                    "berabere",
+                                                    "berabere"
+                                                ) {
+                                                    //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                }
                                             }
                                         }
                                     }
@@ -2100,7 +2076,11 @@ fun LetterGrid(
                                         userId,
                                         hashMapOf(
                                             "hasGuessingRight" to false,
-                                            "puan" to puan
+                                            "puan" to puan,
+                                            "saripuan" to sariPuan,
+                                            "yesilpuan" to yesilPuan,
+                                            "kalansaniye" to timeLeftKopya,
+                                            "tahminsüresi" to timeCount
                                         )
                                     )
                                 }
@@ -2123,7 +2103,7 @@ fun LetterGrid(
                                                 "kazanan",
                                                 "kaybeden"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
                                             puan < rivalScore -> updateGamerWinnerInRoom(
@@ -2134,18 +2114,20 @@ fun LetterGrid(
                                                 "kaybeden",
                                                 "kazanan"
                                             ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
 
                                             }
-                                            else -> updateGamerWinnerInRoom(
-                                                selectedGameType,
-                                                selectedRoom,
-                                                userId,
-                                                rivalId,
-                                                "berabere",
-                                                "berabere"
-                                            ) {
-                                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                            else -> if(puan != 0){
+                                                updateGamerWinnerInRoom(
+                                                    selectedGameType,
+                                                    selectedRoom,
+                                                    userId,
+                                                    rivalId,
+                                                    "berabere",
+                                                    "berabere"
+                                                ) {
+                                                    //navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId")
+                                                }
                                             }
                                         }
                                     }
@@ -2256,7 +2238,7 @@ fun updateGamerWinnerInRoom(
 
     db.collection(gamerPath).get().addOnSuccessListener { snapshot ->
         val loserGamerPath = "$gamerPath/$rivalId"
-        db.document(loserGamerPath).set(hashMapOf("ready" to false, "status" to status1 ), SetOptions.merge())
+        db.document(loserGamerPath).set(hashMapOf("status" to status1 ), SetOptions.merge())
             .addOnSuccessListener {
                 Log.d("updateGamerWinnerInRoom", "Winner updated successfully.")
                 onComplete()
@@ -2268,7 +2250,7 @@ fun updateGamerWinnerInRoom(
 
         // Şu anki kullanıcının (kazananın) durumunu güncelle
         val winnerGamerPath = "$gamerPath/$userId"
-        db.document(winnerGamerPath).set(hashMapOf("ready" to false, "status" to status ), SetOptions.merge())
+        db.document(winnerGamerPath).set(hashMapOf("status" to status ), SetOptions.merge())
             .addOnSuccessListener {
                 Log.d("updateGamerWinnerInRoom", "Winner updated successfully.")
                 onComplete()
