@@ -3,16 +3,22 @@ package com.ft.word_arena_game.ui.screens
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.ft.word_arena_game.ui.components.ShowFloatingDialog
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
@@ -427,6 +434,39 @@ fun FinishScreen(
             .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ){
+
+
+            var showDialog by remember { mutableStateOf(false) }
+            if (showDialog) {
+                ShowFloatingDialog(
+                    onDismiss = { showDialog = false },  // Dialog'u kapat
+                    wordList = listOf("elma", "adam"), // Örnek kelime listesi
+                    gridSize = 4,
+                    arananKelime = "adam"// İstenen ızgara boyutuba
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth() // Row'u genişlet
+                    .padding(8.dp), // Padding ekleyin
+                horizontalArrangement = Arrangement.Start, // Sağa hizalama
+                verticalAlignment = Alignment.CenterVertically // Dikeyde ortala
+            ) {
+                IconButton(
+                    onClick = {
+                        showDialog = true // Icon Button'a tıklanınca showDialog state'ini güncelle
+                    },
+                    modifier = Modifier.size(48.dp) // Icon Button boyutu
+                ) {
+                    androidx.compose.material.Icon(
+                        imageVector = Icons.Filled.Face,
+                        contentDescription = "Rakibi Gör" // Erişilebilirlik açıklaması
+                    )
+                }
+            }
+
+
             Spacer(modifier = Modifier.height(16.dp))
             // Eğer oyuncu sonuçları yüklenmediyse yükleme işareti göster
             if (isLoading.value) {

@@ -53,11 +53,14 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 import com.ft.word_arena_game.ui.components.GameConnection
 import com.ft.word_arena_game.ui.components.GameExit
+import com.ft.word_arena_game.ui.components.ShowFloatingDialog
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
@@ -820,7 +823,9 @@ fun GameScreen(
                             if (!dortHarfliKelimeler.map { it.uppercase(Locale.forLanguageTag("tr-TR")) }.contains(enteredWord)) {
                                 showErrorDialog = true
 
+
                             } else {
+                                sureDurduMu = true
                                 if (user != null) {
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -846,6 +851,7 @@ fun GameScreen(
                                 showErrorDialog = true
 
                             } else {
+                                sureDurduMu = true
                                 if (user != null) {
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -871,6 +877,7 @@ fun GameScreen(
                                 showErrorDialog = true
 
                             } else {
+                                sureDurduMu = true
                                 if (user != null) {
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -897,6 +904,7 @@ fun GameScreen(
                                 showErrorDialog = true
 
                             } else {
+                                sureDurduMu = true
                                 if (user != null) {
                                     updateGameInfoInRoom(
                                         selectedGameType,
@@ -961,6 +969,10 @@ fun GameScreen(
                         timeLeft
                     )
                 }
+
+
+
+
             }
 
         }
@@ -1080,7 +1092,7 @@ fun LetterGrid(
     var timeCount by remember { mutableStateOf(0)}
     var yesilPuan = 0
     var sariPuan = 0
-    var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }//burayı true ya çek
+    var rakipOyuncuKelimeyiBulamadiMi by remember { mutableStateOf(false) }
     var zamanindaTahminYapilmadiMi by remember { mutableStateOf(false) }
     var rivalScore by remember { mutableStateOf(0) } //
 
@@ -1118,6 +1130,14 @@ fun LetterGrid(
                 Button(
                     onClick = {
                         showErrorDialog2 = false
+                        updateGameInfoInRoom(
+                            selectedGameType,
+                            selectedRoom,
+                            userId,
+                            hashMapOf(
+                                "tahminsüresi" to timeCount
+                            )
+                        )
                         updateGamerWinnerInRoom(
                             selectedGameType,
                             selectedRoom,
@@ -1281,6 +1301,40 @@ fun LetterGrid(
 
     val keyboardController = LocalSoftwareKeyboardController.current
     Column(modifier = Modifier.padding(16.dp)) {
+
+
+        var showDialog by remember { mutableStateOf(false) }
+        if (showDialog) {
+            ShowFloatingDialog(
+                onDismiss = { showDialog = false },  // Dialog'u kapat
+                wordList = listOf("elma", "adam"), // Örnek kelime listesi
+                gridSize = 4,
+                arananKelime = bulunacakKelime// İstenen ızgara boyutuba
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // Row'u genişlet
+                .padding(8.dp), // Padding ekleyin
+            horizontalArrangement = Arrangement.End, // Sağa hizalama
+            verticalAlignment = Alignment.CenterVertically // Dikeyde ortala
+        ) {
+            IconButton(
+                onClick = {
+                    showDialog = true // Icon Button'a tıklanınca showDialog state'ini güncelle
+                },
+                modifier = Modifier.size(48.dp) // Icon Button boyutu
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Face,
+                    contentDescription = "Rakibi Gör" // Erişilebilirlik açıklaması
+                )
+            }
+        }
+
+
+
         for (i in 0 until totalSize step harfSayisi) {
             Row(horizontalArrangement = Arrangement.spacedBy((kutuMesafesi - 2).dp)) {
                 for (j in i until i + harfSayisi) {
@@ -1492,6 +1546,8 @@ fun LetterGrid(
 
 
                 if (rakipOyuncuKelimeyiBulamadiMi) {
+
+                    timeCount+= (10-timeLeft1)
                     timeLeft = 0
                     isTimerRunning = false
                 } else {
@@ -1500,6 +1556,7 @@ fun LetterGrid(
                     timeLeft = 60
                     isTimerRunning = true
                 }
+                println(timeCount)
                 timeLeft1 = 10
                 isTimerRunning1 = true
                 if (letters.slice(currentRow * harfSayisi until (currentRow + 1) * harfSayisi)
@@ -1697,6 +1754,7 @@ fun LetterGrid(
                                 else if(currentRow + 1 == harfSayisi)
                                 {
 //false tahmin hakkı bitti
+                                    println("ssssaaaaa" + timeCount)
                                     puan += timeLeftKopya
                                     println("puannnn : $puan ")
                                     updateGameInfoInRoom(
@@ -2512,5 +2570,8 @@ fun LetterInput(
         cursorBrush = SolidColor(Color.Black)
     )
 }
+
+
+
 
 
