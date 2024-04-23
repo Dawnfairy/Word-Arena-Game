@@ -222,10 +222,10 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                             it1.uid,
                                             "oyunda"
                                         )
-                                        updateGamerInfoInRoom(selectedGameType, selectedRoom, it1.uid)
+                                        updateGamerInfoInRoom(selectedGameType, selectedRoom, it1.uid, false)
                                         val rivalId = currentRequest!!.fromUserId
                                         println("rakip ıdddddddddddddddddd $rivalId")
-                                        navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
+                                        navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId/false")
                                     }
 
 
@@ -409,10 +409,10 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                                     Firebase.auth.currentUser!!.uid,
                                                     "oyunda"
                                                 )
-                                                updateGamerInfoInRoom(selectedGameType, selectedRoom, Firebase.auth.currentUser!!.uid)
+                                                updateGamerInfoInRoom(selectedGameType, selectedRoom, Firebase.auth.currentUser!!.uid , false)
                                                 val rivalId = user.userId
                                                 println("rakip ıdddddddddddddddddd $rivalId")
-                                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
+                                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId/false")
                                             }
 
 
@@ -779,15 +779,30 @@ fun getRandomTurkishLetterAndWordIndex(roomType: String): Pair<String, Int> {
     return Pair(selectedLetter, wordIndex)
 
 }
-fun updateGamerInfoInRoom(gameType: Boolean, roomType: String, userId: String) {
+fun updateGamerInfoInRoom(gameType: Boolean, roomType: String, userId: String, isDuello: Boolean) {
     val db = FirebaseFirestore.getInstance()
     val gamerPath = "game_rooms/$gameType/rooms/$roomType/gamer$roomType/$userId"
 
     val updateMap = hashMapOf<String, Any>(
         "userId" to userId,
         "status" to "oyunda",
-        "puan" to 0,
-        "hasGuessingRight" to false)
+        "hasGuessingRight" to false,
+        "saripuan" to 0,
+        "kalansaniye" to 0,
+        "yesilpuan" to 0,
+        "word" to "",
+        "word1" to "",
+        "word2" to "",
+        "word3" to "",
+        "word4" to "",
+        "word5" to "",
+        "word6" to "",
+        "word7" to ""
+
+    )
+    if (!isDuello) {
+        updateMap["puan"] = 0
+    }
 
     db.document(gamerPath).set(updateMap, SetOptions.merge())
         .addOnSuccessListener {

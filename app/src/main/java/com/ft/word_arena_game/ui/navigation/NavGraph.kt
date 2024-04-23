@@ -28,8 +28,8 @@ object Destinations {
     const val RoomTypeSelectionRoute = "roomTypeSelection"
     const val RoomSelectionRoute = "roomSelection/{roomType}"
     const val RoomRoute = "room/{roomType}/{roomNumber}"
-    const val GameRoute = "game/{roomType}/{roomNumber}/{randomLetter}/{wordIndex}/{rivalId}"
-    const val FinishRoute = "finish/{roomType}/{roomNumber}/{rivalId}"
+    const val GameRoute = "game/{roomType}/{roomNumber}/{randomLetter}/{wordIndex}/{rivalId}/{isDuello}"
+    const val FinishRoute = "finish/{roomType}/{roomNumber}/{rivalId}/{isDuello}"
 }
 
 @Composable
@@ -70,25 +70,30 @@ fun NavGraph(startDestination: String = "login") {
                 navArgument("randomLetter") { type = NavType.StringType },
                 navArgument("wordIndex") { type = NavType.IntType },
                 navArgument("rivalId") { type = NavType.StringType },
-            )) { backStackEntry ->
+                navArgument("isDuello") { type = NavType.BoolType },
+                )) { backStackEntry ->
             val roomType = backStackEntry.arguments?.getBoolean("roomType") ?: false
             val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: ""
             val randomLetter = backStackEntry.arguments?.getString("randomLetter") ?: ""
             val wordIndex = backStackEntry.arguments?.getInt("wordIndex") ?: -1
             val rivalId = backStackEntry.arguments?.getString("rivalId") ?: ""
-            GameScreen(navController, roomType, roomNumber, randomLetter, wordIndex, rivalId)
+            val isDuello = backStackEntry.arguments?.getBoolean("isDuello") ?: false
+            GameScreen(navController, roomType, roomNumber, randomLetter, wordIndex, rivalId, isDuello)
         }
         composable(
             route = FinishRoute,
             arguments = listOf(
                 navArgument("roomType") { type = NavType.BoolType },
                 navArgument("roomNumber") { type = NavType.StringType },
-                navArgument("rivalId") { type = NavType.StringType })
-        ) { backStackEntry ->
+                navArgument("rivalId") { type = NavType.StringType },
+                navArgument("isDuello") { type = NavType.BoolType })
+
+            ) { backStackEntry ->
             val roomType = backStackEntry.arguments?.getBoolean("roomType") ?: false
             val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: ""
             val rivalId = backStackEntry.arguments?.getString("rivalId") ?: ""
-            FinishScreen(navController, roomType, roomNumber, rivalId)
+            val isDuello = backStackEntry.arguments?.getBoolean("isDuello") ?: false
+            FinishScreen(navController, roomType, roomNumber, rivalId, isDuello)
         }
     }
 }

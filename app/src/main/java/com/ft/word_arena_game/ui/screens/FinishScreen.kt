@@ -40,7 +40,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import com.ft.word_arena_game.ui.components.ShowFloatingDialog
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
@@ -52,11 +51,11 @@ data class PlayerResult(
     val username: String?,
     val status: String?, // Oyuncunun tahminleri
     val puan: Int, // Tahmin için harcanan süre
+    val puanduello: Int,
     val saripuan: Int, // Puan detayları
     val yesilpuan: Int, // Puan detayları
     val kalansaniye: Int, // Puan detayları
     val tahminsüresi: Int
-
 )
 
 @Composable
@@ -64,8 +63,9 @@ fun FinishScreen(
     navController: NavController,
     selectedGameType: Boolean,
     selectedRoom: String,
-    rivalId: String // Düello isteği için callback
-) {
+    rivalId: String, // Düello isteği için callback
+    isDuello: Boolean
+    ) {
     val user = Firebase.auth.currentUser
     val userId = user!!.uid
     val context = LocalContext.current
@@ -97,18 +97,19 @@ fun FinishScreen(
 
     LaunchedEffect(userId) {
         findUsernameById(userId, FirebaseFirestore.getInstance()) { username ->            // Kullanıcı adı bulunduğunda, diğer verileri çek
-            val propertyNames = listOf("status", "puan", "saripuan", "yesilpuan", "kalansaniye", "tahminsüresi")
+            val propertyNames = listOf("status", "puan", "saripuan","puanduello", "yesilpuan", "kalansaniye", "tahminsüresi")
             fetchDocumentData(selectedGameType, selectedRoom, userId, propertyNames) { playerData ->
                 playerOneResult = PlayerResult(                // Tüm veriler toplandığında, `PlayerResult` nesnesini oluştur
                     username = username ?: "Bilinmiyor",
                     status = playerData["status"] as? String ?: "",
                     puan = (playerData["puan"] as? Number)?.toInt() ?: 0,
+                    puanduello = (playerData["puanduello"] as? Number)?.toInt() ?: 0,
                     saripuan = (playerData["saripuan"] as? Number)?.toInt() ?: 0,
                     yesilpuan = (playerData["yesilpuan"] as? Number)?.toInt() ?: 0,
                     kalansaniye = (playerData["kalansaniye"] as? Number)?.toInt() ?: 0,
                     tahminsüresi = (playerData["tahminsüresi"] as? Number)?.toInt() ?: 0
-
                 )
+                println("puan düello " + playerOneResult!!.puanduello)
             }
         }
     }
@@ -116,13 +117,14 @@ fun FinishScreen(
     LaunchedEffect(rivalId) {
         findUsernameById(rivalId, FirebaseFirestore.getInstance()) { username ->
             // Kullanıcı adı bulunduğunda, diğer verileri çek
-            val propertyNames = listOf("status", "puan", "saripuan", "yesilpuan",  "kalansaniye", "tahminsüresi")
+            val propertyNames = listOf("status", "puan", "puanduello", "saripuan", "yesilpuan",  "kalansaniye", "tahminsüresi")
             fetchDocumentData(selectedGameType, selectedRoom, rivalId, propertyNames) { playerData ->
                 // Tüm veriler toplandığında, `PlayerResult` nesnesini oluştur
                 playerTwoResult = PlayerResult(
                     username = username ?: "Bilinmiyor",
                     status = playerData["status"] as? String ?: "",
                     puan = (playerData["puan"] as? Number)?.toInt() ?: 0,
+                    puanduello = (playerData["puanduello"] as? Number)?.toInt() ?: 0,
                     saripuan = (playerData["saripuan"] as? Number)?.toInt() ?: 0,
                     yesilpuan = (playerData["yesilpuan"] as? Number)?.toInt() ?: 0,
                     kalansaniye = (playerData["kalansaniye"] as? Number)?.toInt() ?: 0,
@@ -224,8 +226,8 @@ fun FinishScreen(
                             )
                             user.let { it1 ->
                                 val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(selectedRoom)
-                                updateGamerInfoInRoom(selectedGameType, selectedRoom, it1.uid)
-                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
+                                updateGamerInfoInRoom(selectedGameType, selectedRoom, it1.uid, true)
+                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId/true")
                             }
 
 
@@ -389,8 +391,8 @@ fun FinishScreen(
                                                     Toast.LENGTH_LONG
                                                 ).show()
                                                 val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(selectedRoom)
-                                                updateGamerInfoInRoom(selectedGameType, selectedRoom, Firebase.auth.currentUser!!.uid)
-                                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
+                                                updateGamerInfoInRoom(selectedGameType, selectedRoom, Firebase.auth.currentUser!!.uid, true )
+                                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId/true")
                                             }
                                             "rejected"
                                             -> {
@@ -438,12 +440,25 @@ fun FinishScreen(
 
             var showDialog by remember { mutableStateOf(false) }
             if (showDialog) {
-                ShowFloatingDialog(
+                val wordList = mutableListOf<String>()
+                val propertyNames = listOf("word1", "word2", "word3","word4", "word5", "word6", "word7")
+                fetchDocumentData(selectedGameType, selectedRoom, userId, propertyNames) { data ->
+                    for ((index, propertyName) in propertyNames.withIndex()) {
+                        val word = data[propertyName] as String? // Özelliği al
+                        if (!word.isNullOrEmpty()) { // Dize boş veya null değilse listeye ekle
+                            wordList.add(word)
+                        }
+                    }
+                    println(wordList) // Liste yazdır
+                }
+               /* ShowFloatingDialog(
                     onDismiss = { showDialog = false },  // Dialog'u kapat
                     wordList = listOf("elma", "adam"), // Örnek kelime listesi
                     gridSize = 4,
                     arananKelime = "adam"// İstenen ızgara boyutuba
                 )
+
+                */
             }
 
             Row(
@@ -474,11 +489,11 @@ fun FinishScreen(
             } else {
                 // Oyuncu sonuçlarını göster
                 playerOneResult?.let {
-                    PlayerResultSection(playerResult = it)
+                    PlayerResultSection(it, isDuello)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
                 playerTwoResult?.let {
-                    PlayerResultSection(playerResult = it)
+                    PlayerResultSection(it, isDuello)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -491,17 +506,33 @@ fun FinishScreen(
 }
 
 @Composable
-fun PlayerResultSection(playerResult: PlayerResult) {
+fun PlayerResultSection(playerResult: PlayerResult, isDuello: Boolean) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "${playerResult.status} oyuncu ''${playerResult.username}''", style = MaterialTheme.typography.titleLarge)
         Text(text = "Sonuçlar", style = MaterialTheme.typography.titleMedium)
-        if(playerResult.puan != 0){
-            Text(text = "Sarı alan: ${playerResult.saripuan} puan", style = MaterialTheme.typography.bodySmall)
-            Text(text = "Yeşil alan: ${playerResult.yesilpuan} puan", style = MaterialTheme.typography.bodySmall)
-            Text(text = "Kalan süre: ${playerResult.kalansaniye} saniye", style = MaterialTheme.typography.bodySmall)
-            Text(text = "Skor: ${playerResult.puan} puan", style = MaterialTheme.typography.bodyMedium)
+        if(isDuello){
+            if( playerResult.puanduello != 0){
+                Text(text = "Sarı alan: ${playerResult.saripuan} puan", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Yeşil alan: ${playerResult.yesilpuan} puan", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Kalan süre: ${playerResult.kalansaniye} saniye", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Skor: ${playerResult.puanduello} puan", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Geçmiş Skor: ${playerResult.puan} puan", style = MaterialTheme.typography.bodyMedium)
+            }else if(playerResult.puan != 0){
+                Text(text = "Geçmiş Skor: ${playerResult.puan} puan", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Tahmin süresi: ${playerResult.tahminsüresi} saniye", style = MaterialTheme.typography.bodySmall)
+            }else{
+                Text(text = "Tahmin süresi: ${playerResult.tahminsüresi} saniye", style = MaterialTheme.typography.bodySmall)
+            }
+
         }else{
-            Text(text = "Tahmin süresi: ${playerResult.tahminsüresi} saniye", style = MaterialTheme.typography.bodySmall)
+            if(playerResult.puan != 0){
+                Text(text = "Sarı alan: ${playerResult.saripuan} puan", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Yeşil alan: ${playerResult.yesilpuan} puan", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Kalan süre: ${playerResult.kalansaniye} saniye", style = MaterialTheme.typography.bodySmall)
+                Text(text = "Skor: ${playerResult.puan} puan", style = MaterialTheme.typography.bodyMedium)
+            }else {
+                Text(text = "Tahmin süresi: ${playerResult.tahminsüresi} saniye", style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
