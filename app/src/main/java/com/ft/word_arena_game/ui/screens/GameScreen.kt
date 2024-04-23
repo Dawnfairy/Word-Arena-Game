@@ -2,10 +2,9 @@ package com.ft.word_arena_game.ui.screens
 
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -55,23 +54,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Dialog
+import com.ft.word_arena_game.R
 import com.ft.word_arena_game.ui.components.GameConnection
 import com.ft.word_arena_game.ui.components.GameExit
+import com.ft.word_arena_game.ui.components.ShowFloatingDialog
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.util.Locale
 import kotlin.random.Random
 
@@ -92,7 +89,7 @@ fun GameScreen(
     rivalId: String,
     isDuello: Boolean
 ) {
-
+    var enteredWord by remember { mutableStateOf("") }
     val user = Firebase.auth.currentUser
     val context = LocalContext.current
     val connect = GameConnection(context = context)
@@ -568,7 +565,7 @@ fun GameScreen(
                         Button(
                             onClick = {
                                 //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
-                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId/$isDuello")
+                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId/$isDuello/$enteredWord")
                                 //navController.popBackStack()
                             }
                         ) {
@@ -588,7 +585,7 @@ fun GameScreen(
                         Button(
                             onClick = {
                                 //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
-                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId/$isDuello")
+                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId/$isDuello/$enteredWord")
                                 //navController.popBackStack()
                             }
                         ) {
@@ -609,7 +606,7 @@ fun GameScreen(
                             onClick = {
                                 //deletePlayerFromGamerCollection(selectedGameType, selectedRoom, user.uid)
 
-                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId/$isDuello")
+                                navController.navigate("finish/$selectedGameType/$selectedRoom/$rivalId/$isDuello/$enteredWord")
                                 //navController.popBackStack()
                             }
                         ) {
@@ -643,6 +640,16 @@ fun GameScreen(
 
     var timeLeft by remember { mutableStateOf(60) }
     if (connect) {
+        Box(
+            modifier = Modifier.fillMaxSize(), // Box ekranın tamamını kaplasın
+            contentAlignment = Alignment.Center // Box içindeki içeriği merkezle
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ftk4), // Resmi drawable'dan yükle
+                contentDescription = "Background Image", // Erişilebilirlik için açıklama
+                modifier = Modifier.fillMaxSize(), // Resmi ekranın tamamına yay
+                contentScale = ContentScale.Crop // Resmi ekranın boyutlarına uydur
+            )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -678,7 +685,6 @@ fun GameScreen(
                     )
                     {
                         Box(
-
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .size(50.dp)
@@ -843,10 +849,11 @@ fun GameScreen(
                 }
 
                 Button(
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3f4263)),
                     onClick = {
                         focusManager.clearFocus()
 
-                        val enteredWord =
+                        enteredWord =
                             letters.joinToString(separator = "")  //  harf sabitde bulunan indexteki harfi buraya eklemen gerek enteredWord değişkenine
                         println(enteredWord)
 
@@ -1000,12 +1007,15 @@ fun GameScreen(
                         rivalId,
                         navController,
                         timeLeft,
-                        isDuello
+                        isDuello,
+                        enteredWord
+
                     )
                 }
             }
 
         }
+    }
 
         if (user != null) {
             GameExit(selectedGameType, selectedRoom, user.uid, rivalId)
@@ -1115,10 +1125,12 @@ fun LetterGrid(
     rivalId: String,
     navController: NavController,
     timeLeftKopya: Int,
-    isDuello: Boolean
+    isDuello: Boolean,
+    enteredWord: String,
 ) {
 
 
+    println("enteredWord " + enteredWord)
     var puan = 0
     var timeCount by remember { mutableStateOf(0) }
     var yesilPuan = 0
@@ -1331,31 +1343,28 @@ fun LetterGrid(
 
 
     val keyboardController = LocalSoftwareKeyboardController.current
-    Column(modifier = Modifier.padding(16.dp)) {
+    Box(
+        modifier = Modifier.fillMaxSize(), // Box ekranın tamamını kaplasın
+        contentAlignment = Alignment.Center // Box içindeki içeriği merkezle
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ftk2), // Resmi drawable'dan yükle
+            contentDescription = "Background Image", // Erişilebilirlik için açıklama
+            modifier = Modifier.fillMaxSize(), // Resmi ekranın tamamına yay
+            contentScale = ContentScale.Crop // Resmi ekranın boyutlarına uydur
+        )
+        Column(modifier = Modifier.padding(16.dp)) {
 
-
+        val wordList = remember { mutableStateListOf<String>() }
         var showDialog by remember { mutableStateOf(false) }
         if (showDialog) {
-            val wordList = mutableListOf<String>()
-            val propertyNames =
-                listOf("word1", "word2", "word3", "word4", "word5", "word6", "word7")
-            fetchDocumentData(selectedGameType, selectedRoom, userId, propertyNames) { data ->
-                for ((index, propertyName) in propertyNames.withIndex()) {
-                    val word = data[propertyName] as String? // Özelliği al
-                    if (!word.isNullOrEmpty()) { // Dize boş veya null değilse listeye ekle
-                        wordList.add(word)
-                    }
-                }
-                println(wordList) // Liste yazdır
-            }
-            /*ShowFloatingDialog(
+
+            ShowFloatingDialog(
                 onDismiss = { showDialog = false },  // Dialog'u kapat
                 wordList = wordList, // Örnek kelime listesi
                 gridSize = 4,
-                arananKelime = bulunacakKelime// İstenen ızgara boyutuba
+                arananKelime = enteredWord// İstenen ızgara boyutuba
             )
-
-             */
         }
 
         Row(
@@ -1367,7 +1376,25 @@ fun LetterGrid(
         ) {
             IconButton(
                 onClick = {
-                    showDialog = true // Icon Button'a tıklanınca showDialog state'ini güncelle
+                    val propertyNames =
+                        listOf("word1", "word2", "word3", "word4", "word5", "word6", "word7")
+                    fetchDocumentData(
+                        selectedGameType,
+                        selectedRoom,
+                        rivalId,
+                        propertyNames
+                    ) { data ->
+                        wordList.clear()
+                        for ((index, propertyName) in propertyNames.withIndex()) {
+                            val word = data[propertyName] as String? // Özelliği al
+                            if (!word.isNullOrEmpty()) { // Dize boş veya null değilse listeye ekle
+                                wordList.add(word)
+                            }
+                        }
+                        println(wordList) // Liste yazdır
+                        showDialog = true // Icon Button'a tıklanınca showDialog state'ini güncelle
+
+                    }
                 },
                 modifier = Modifier.size(48.dp) // Icon Button boyutu
             ) {
@@ -1592,6 +1619,7 @@ fun LetterGrid(
 
 
         Button(
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0e7655)),
             onClick = {
 
 
@@ -2315,12 +2343,6 @@ fun LetterGrid(
                         keyboardController?.hide() // Klavyeyi gizle
                     }
                 }
-                /*
-                if (context is Activity) {
-                    CoroutineScope(Dispatchers.Main).launch {
-                        captureAndUploadScreenshot(context, userId)
-                    }
-                }*/
             },
 
             enabled = if (harfSayisi > currentRow) {
@@ -2339,6 +2361,7 @@ fun LetterGrid(
 
 
     }
+}
 
 // İlk kutucuğa odaklan
     LaunchedEffect(Unit) {

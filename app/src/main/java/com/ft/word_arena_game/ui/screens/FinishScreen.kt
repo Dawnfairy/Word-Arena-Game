@@ -2,6 +2,7 @@ package com.ft.word_arena_game.ui.screens
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,16 +31,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.ft.word_arena_game.R
+import com.ft.word_arena_game.ui.components.ShowFloatingDialog
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
@@ -64,7 +70,8 @@ fun FinishScreen(
     selectedGameType: Boolean,
     selectedRoom: String,
     rivalId: String, // Düello isteği için callback
-    isDuello: Boolean
+    isDuello: Boolean,
+    enteredWord: String
     ) {
     val user = Firebase.auth.currentUser
     val userId = user!!.uid
@@ -427,38 +434,35 @@ fun FinishScreen(
                 Icon(Icons.Default.ExitToApp, contentDescription = "Oyundan Çık")
             }
         }
-    ){
-            paddingValues ->
-        Column(
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Arkaplan resmi olarak ekleyin
+            Image(
+                painter = painterResource(id = R.drawable.ftk6), // Resmi drawable'dan yükle
+                contentDescription = "Background Image", // Erişilebilirlik için açıklama
+                modifier = Modifier.fillMaxSize(), // Resmi ekranın tamamına yay
+                contentScale = ContentScale.Crop // Resmi ekranın boyutlarına uydur
+            )
+
+            Column(
             modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(16.dp),
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
-        ){
+        ) {
 
-
+            val wordList = remember { mutableStateListOf<String>() }
             var showDialog by remember { mutableStateOf(false) }
             if (showDialog) {
-                val wordList = mutableListOf<String>()
-                val propertyNames = listOf("word1", "word2", "word3","word4", "word5", "word6", "word7")
-                fetchDocumentData(selectedGameType, selectedRoom, userId, propertyNames) { data ->
-                    for ((index, propertyName) in propertyNames.withIndex()) {
-                        val word = data[propertyName] as String? // Özelliği al
-                        if (!word.isNullOrEmpty()) { // Dize boş veya null değilse listeye ekle
-                            wordList.add(word)
-                        }
-                    }
-                    println(wordList) // Liste yazdır
-                }
-               /* ShowFloatingDialog(
+                ShowFloatingDialog(
                     onDismiss = { showDialog = false },  // Dialog'u kapat
-                    wordList = listOf("elma", "adam"), // Örnek kelime listesi
+                    wordList = wordList, // Örnek kelime listesi
                     gridSize = 4,
-                    arananKelime = "adam"// İstenen ızgara boyutuba
+                    arananKelime = enteredWord// İstenen ızgara boyutuba
                 )
 
-                */
+
             }
 
             Row(
@@ -470,7 +474,26 @@ fun FinishScreen(
             ) {
                 IconButton(
                     onClick = {
-                        showDialog = true // Icon Button'a tıklanınca showDialog state'ini güncelle
+                        val propertyNames =
+                            listOf("word1", "word2", "word3", "word4", "word5", "word6", "word7")
+                        fetchDocumentData(
+                            selectedGameType,
+                            selectedRoom,
+                            rivalId,
+                            propertyNames
+                        ) { data ->
+                            wordList.clear()
+                            for ((index, propertyName) in propertyNames.withIndex()) {
+                                val word = data[propertyName] as String? // Özelliği al
+                                if (!word.isNullOrEmpty()) { // Dize boş veya null değilse listeye ekle
+                                    wordList.add(word)
+                                }
+                            }
+                            println(wordList) // Liste yazdır
+                            showDialog =
+                                true // Icon Button'a tıklanınca showDialog state'ini güncelle
+
+                        }
                     },
                     modifier = Modifier.size(48.dp) // Icon Button boyutu
                 ) {
@@ -485,7 +508,7 @@ fun FinishScreen(
             Spacer(modifier = Modifier.height(16.dp))
             // Eğer oyuncu sonuçları yüklenmediyse yükleme işareti göster
             if (isLoading.value) {
-                    CircularProgressIndicator(color = Color.Gray) // Yükleme işareti
+                CircularProgressIndicator(color = Color.Gray) // Yükleme işareti
             } else {
                 // Oyuncu sonuçlarını göster
                 playerOneResult?.let {
@@ -498,6 +521,7 @@ fun FinishScreen(
                 }
             }
         }
+    }
     }
 
 

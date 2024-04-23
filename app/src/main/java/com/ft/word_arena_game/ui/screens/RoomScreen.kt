@@ -2,6 +2,7 @@ package com.ft.word_arena_game.ui.screens
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -15,9 +16,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,14 +32,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.ft.word_arena_game.R
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
@@ -101,19 +108,35 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
             onDismiss = { showConfirmDialog = false }
         )
     }
-
-    Column(
+    Box(
+        modifier = Modifier.fillMaxSize(), // Box ekranın tamamını kaplasın
+        contentAlignment = Alignment.Center // Box içindeki içeriği merkezle
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ftk3), // Resmi drawable'dan yükle
+            contentDescription = "Background Image", // Erişilebilirlik için açıklama
+            modifier = Modifier.fillMaxSize(), // Resmi ekranın tamamına yay
+            contentScale = ContentScale.Crop // Resmi ekranın boyutlarına uydur
+        )
+        Column(
         modifier = Modifier
-            .fillMaxSize()
-        //.background(color = Color(0xFF1E1E1E)),
-        ,
+            .fillMaxSize(),
         //verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+        ) {
 
-        Button(onClick = { showConfirmDialog = true }) {
+        Button(onClick = { showConfirmDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37253f)),// Buton kenarlarına ovallik ekle
+        ) {
             Text("Odadan Çık")
         }
+            Text(
+                text = "$selectedRoom Harfli Oda",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 16.dp ,bottom = 16.dp)
+            )
         // Kullanıcı odada olduğu sürece oyuncuları listele
         var remainingTime by remember { mutableStateOf<Long?>(null) }
         var remainingTime1 by remember { mutableStateOf<Long?>(null) }
@@ -193,7 +216,8 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                             },
 
                             confirmButton = {
-                                Button(onClick = {
+                                Button(colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37253f)),
+                                    onClick = {
                                     // İsteği kabul et
                                     showDialog1 = false
                                     respondToChallengeRequest(
@@ -215,14 +239,21 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                         }
                                     )
                                     user?.let { it1 ->
-                                        val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(selectedRoom)
+                                        val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(
+                                            selectedRoom
+                                        )
                                         updateUserStatus(
                                             selectedGameType,
                                             selectedRoom,
                                             it1.uid,
                                             "oyunda"
                                         )
-                                        updateGamerInfoInRoom(selectedGameType, selectedRoom, it1.uid, false)
+                                        updateGamerInfoInRoom(
+                                            selectedGameType,
+                                            selectedRoom,
+                                            it1.uid,
+                                            false
+                                        )
                                         val rivalId = currentRequest!!.fromUserId
                                         println("rakip ıdddddddddddddddddd $rivalId")
                                         navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId/false")
@@ -234,7 +265,8 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                 }
                             },
                             dismissButton = {
-                                Button(onClick = {
+                                Button(colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37253f)),
+                                    onClick = {
                                     // İsteği reddet
                                     showDialog1 = false
                                     respondToChallengeRequest(
@@ -349,12 +381,13 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                         ) {
                             Text(
                                 text = user.username,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
                             )
                             Text(
                                 text = user.status,
                                 fontWeight = FontWeight.Light,
-                                fontSize = 8.sp
+                                fontSize = 12.sp
                             )
                         }
 
@@ -402,14 +435,21 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                                                     "${user.username} isteğinizi kabul etti.",
                                                     Toast.LENGTH_LONG
                                                 ).show()
-                                                val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(selectedRoom)
+                                                val (randomLetter, wordIndex) = getRandomTurkishLetterAndWordIndex(
+                                                    selectedRoom
+                                                )
                                                 updateUserStatus(
                                                     selectedGameType,
                                                     selectedRoom,
                                                     Firebase.auth.currentUser!!.uid,
                                                     "oyunda"
                                                 )
-                                                updateGamerInfoInRoom(selectedGameType, selectedRoom, Firebase.auth.currentUser!!.uid , false)
+                                                updateGamerInfoInRoom(
+                                                    selectedGameType,
+                                                    selectedRoom,
+                                                    Firebase.auth.currentUser!!.uid,
+                                                    false
+                                                )
                                                 val rivalId = user.userId
                                                 println("rakip ıdddddddddddddddddd $rivalId")
                                                 navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId/false")
@@ -438,8 +478,9 @@ fun RoomScreen(navController: NavController, selectedGameType: Boolean, selected
                 }
             }
 
-        } else {
+            } else {
             Text(text = "Odadan ayrıldınız.")
+            }
         }
     }
 }

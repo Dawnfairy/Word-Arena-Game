@@ -1,15 +1,13 @@
 package com.ft.word_arena_game.ui.screens
 
 import android.widget.Toast
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,14 +15,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.ft.word_arena_game.R
 import com.ft.word_arena_game.ui.components.GameButton
 import com.ft.word_arena_game.ui.components.GameTextField
 import com.ft.word_arena_game.ui.navigation.Destinations.LoginRoute
@@ -71,10 +69,19 @@ fun SignUpScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
 
+    Box(
+        modifier = Modifier.fillMaxSize(), // Box ekranın tamamını kaplasın
+        contentAlignment = Alignment.Center // Box içindeki içeriği merkezle
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.loginback), // Resmi drawable'dan yükle
+            contentDescription = "Background Image", // Erişilebilirlik için açıklama
+            modifier = Modifier.fillMaxSize(), // Resmi ekranın tamamına yay
+            contentScale = ContentScale.Crop // Resmi ekranın boyutlarına uydur
+        )
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color(0xFF1E1E1E)),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -82,57 +89,55 @@ fun SignUpScreen(navController: NavController) {
             // Burada yükleniyor durumunu göstermek için bir ProgressBar eklenebilir.
             CircularProgressIndicator()
         } else {
-        Text(
-            text = "WordArena'ya Hoş Geldiniz!",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
 
-        GameTextField(
-            label = "Kullanıcı Adı",
-            value = username,
-            onValueChange = { username = it }
-        )
+            GameTextField(
+                label = "Kullanıcı Adı",
+                value = username,
+                onValueChange = { username = it }
+            )
 
-        GameTextField(
-            label = "Şifre",
-            value = password,
-            onValueChange = { password = it },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
+            GameTextField(
+                label = "Şifre",
+                value = password,
+                onValueChange = { password = it },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
 
-        GameButton(
-            text = "Kayıt Ol",
-            onClick = {
-                loading = true
-                // Önce kullanıcı adının benzersizliğini kontrol et
-                checkUsernameUnique(username) { isUnique ->
-                    if (isUnique) {
-                        // Eğer kullanıcı adı benzersiz ise kayıt işlemine devam ediyoruz.
-                        registerUser(username, password) { isSuccessful, message ->
-                            if (isSuccessful) {
-                                // Kayıt başarılı ise kullanıcıyı bir sonraki ekrana yönlendiriyoruz.
-                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                                navController.navigate(LoginRoute)
-                                loading = false
-                            } else {
-                                // Kayıt başarısız ise kullanıcıya bir hata mesajı gösteriyoruz.
-                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            GameButton(
+                text = "Kayıt Ol",
+                onClick = {
+                    loading = true
+                    // Önce kullanıcı adının benzersizliğini kontrol et
+                    checkUsernameUnique(username) { isUnique ->
+                        if (isUnique) {
+                            // Eğer kullanıcı adı benzersiz ise kayıt işlemine devam ediyoruz.
+                            registerUser(username, password) { isSuccessful, message ->
+                                if (isSuccessful) {
+                                    // Kayıt başarılı ise kullanıcıyı bir sonraki ekrana yönlendiriyoruz.
+                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                    navController.navigate(LoginRoute)
+                                    loading = false
+                                } else {
+                                    // Kayıt başarısız ise kullanıcıya bir hata mesajı gösteriyoruz.
+                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                }
                             }
+                        } else {
+                            // Eğer kullanıcı adı benzersiz değilse bir hata mesajı gösteriyoruz.
+                            Toast.makeText(
+                                context,
+                                "Kullanıcı adı zaten alınmış!",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
-                    } else {
-                        // Eğer kullanıcı adı benzersiz değilse bir hata mesajı gösteriyoruz.
-                        Toast.makeText(context, "Kullanıcı adı zaten alınmış!", Toast.LENGTH_LONG).show()
+                        loading = false
                     }
-                    loading = false
-                }
-            } // Kayıt işlemi tamamlandığında ne olacağını belirt
-        )
-        //SignUpText(onClick = { navController.popBackStack() })
+                } // Kayıt işlemi tamamlandığında ne olacağını belirt
+            )
+            //SignUpText(onClick = { navController.popBackStack() })
+        }
     }
-    }
+}
 }
 
 @Composable

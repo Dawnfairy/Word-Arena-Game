@@ -1,7 +1,8 @@
 package com.ft.word_arena_game.ui.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,37 +16,49 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.ft.word_arena_game.R
 
 
 @Composable
 fun RoomTypeSelectionScreen(navController: NavController) {
-    Column(
+    Box(
+        modifier = Modifier.fillMaxSize(), // Box ekranın tamamını kaplasın
+        contentAlignment = Alignment.Center // Box içindeki içeriği merkezle
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ftk5), // Resmi drawable'dan yükle
+            contentDescription = "Background Image", // Erişilebilirlik için açıklama
+            modifier = Modifier.fillMaxSize(), // Resmi ekranın tamamına yay
+            contentScale = ContentScale.Crop // Resmi ekranın boyutlarına uydur
+        )
+        Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFF1E1E1E))
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+        ) {
         Text(
             text = "Oyun Türü Seçiniz",
             color = Color.White,
-            fontSize = 24.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
         Button(
-            onClick = { navController.navigate("roomSelection/true")  },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1363E8)),
+            onClick = { navController.navigate("roomSelection/true") },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF552465)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .padding(32.dp,0.dp)
+                .padding(32.dp, 0.dp)
         ) {
             Text(
                 text = "Harf Sabiti Var",
@@ -58,11 +71,11 @@ fun RoomTypeSelectionScreen(navController: NavController) {
 
         Button(
             onClick = { navController.navigate("roomSelection/false") },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8135B)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF552465)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .padding(32.dp,0.dp)
+                .padding(32.dp, 0.dp)
         ) {
             Text(
                 text = "Harf Sabiti Yok",
@@ -71,4 +84,5 @@ fun RoomTypeSelectionScreen(navController: NavController) {
             )
         }
     }
+}
 }

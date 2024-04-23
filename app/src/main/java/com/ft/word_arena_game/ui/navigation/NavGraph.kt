@@ -29,7 +29,7 @@ object Destinations {
     const val RoomSelectionRoute = "roomSelection/{roomType}"
     const val RoomRoute = "room/{roomType}/{roomNumber}"
     const val GameRoute = "game/{roomType}/{roomNumber}/{randomLetter}/{wordIndex}/{rivalId}/{isDuello}"
-    const val FinishRoute = "finish/{roomType}/{roomNumber}/{rivalId}/{isDuello}"
+    const val FinishRoute = "finish/{roomType}/{roomNumber}/{rivalId}/{isDuello}/{enteredWord}"
 }
 
 @Composable
@@ -86,14 +86,17 @@ fun NavGraph(startDestination: String = "login") {
                 navArgument("roomType") { type = NavType.BoolType },
                 navArgument("roomNumber") { type = NavType.StringType },
                 navArgument("rivalId") { type = NavType.StringType },
-                navArgument("isDuello") { type = NavType.BoolType })
+                navArgument("isDuello") { type = NavType.BoolType },
+                navArgument("enteredWord") { type = NavType.StringType },
+            )
 
             ) { backStackEntry ->
             val roomType = backStackEntry.arguments?.getBoolean("roomType") ?: false
             val roomNumber = backStackEntry.arguments?.getString("roomNumber") ?: ""
             val rivalId = backStackEntry.arguments?.getString("rivalId") ?: ""
             val isDuello = backStackEntry.arguments?.getBoolean("isDuello") ?: false
-            FinishScreen(navController, roomType, roomNumber, rivalId, isDuello)
+            val enteredWord = backStackEntry.arguments?.getString("enteredWord") ?: ""
+            FinishScreen(navController, roomType, roomNumber, rivalId, isDuello, enteredWord)
         }
     }
 }

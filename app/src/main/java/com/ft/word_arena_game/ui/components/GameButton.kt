@@ -22,7 +22,7 @@ fun GameButton(
     Button(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6cb5ba)),// Buton kenarlarına ovallik ekle
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFf4985d)),// Buton kenarlarına ovallik ekle
         modifier = modifier
             .padding(16.dp)
             .fillMaxWidth()
