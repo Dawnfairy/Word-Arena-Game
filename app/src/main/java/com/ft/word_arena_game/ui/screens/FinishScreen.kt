@@ -458,7 +458,7 @@ fun FinishScreen(
                 ShowFloatingDialog(
                     onDismiss = { showDialog = false },  // Dialog'u kapat
                     wordList = wordList, // Örnek kelime listesi
-                    gridSize = 4,
+                    gridSize = enteredWord.length,
                     arananKelime = enteredWord// İstenen ızgara boyutuba
                 )
 

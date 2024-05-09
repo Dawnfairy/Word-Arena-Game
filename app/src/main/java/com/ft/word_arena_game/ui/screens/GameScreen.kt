@@ -89,7 +89,7 @@ fun GameScreen(
     rivalId: String,
     isDuello: Boolean
 ) {
-    var enteredWord by remember { mutableStateOf("") }
+    var enteredWord by remember { mutableStateOf(" ") }
     val user = Firebase.auth.currentUser
     val context = LocalContext.current
     val connect = GameConnection(context = context)
@@ -768,7 +768,7 @@ fun GameScreen(
                                     duration = SnackbarDuration.Short
                                 )
                                 delay(2000) // 2 saniye bekleyin
-                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId")
+                                navController.navigate("game/$selectedGameType/$selectedRoom/$randomLetter/$wordIndex/$rivalId/$isDuello")
                             }
 
                             else -> Unit
@@ -1362,7 +1362,7 @@ fun LetterGrid(
             ShowFloatingDialog(
                 onDismiss = { showDialog = false },  // Dialog'u kapat
                 wordList = wordList, // Örnek kelime listesi
-                gridSize = 4,
+                gridSize = harfSayisi,
                 arananKelime = enteredWord// İstenen ızgara boyutuba
             )
         }
